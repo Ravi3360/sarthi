@@ -1,0 +1,23 @@
+kind = "mobile"
+previewPath = "/"
+title = "SAATHI"
+version = "1.0.0"
+id = "artifacts/saathi"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 23270
+
+[services.development]
+run = "pnpm --filter @workspace/saathi run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/saathi", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/saathi", "run", "serve" ]
+
+[services.env]
+PORT = "23270"
+BASE_PATH = "/"

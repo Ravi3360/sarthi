@@ -1,0 +1,29 @@
+{
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "save": "Save",
+    "skip": "Skip",
+    "retry": "Retry",
+    "loading": "Loading…",
+    "upload": "Upload",
+    "share": "Share",
+    "download": "Download",
+    "verified": "Verified",
+    "pending": "Pending",
+    "edit": "Edit",
+    "add": "Add",
+    "done": "Done"
+  },
+  "auth": {
+    "welcome": "Welcome to SAATHI",
+    "tagline": "Your identity, your progress"
+  },
+  "tabs": {
+    "home": "Home",
+    "documents": "Documents",
+    "schemes": "Schemes",
+    "income": "Income",
+    "profile": "Profile"
+  }
+}
