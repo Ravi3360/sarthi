@@ -1,26 +1,24 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { storageKeys } from '@/services/storageKeys';
-import { generateId } from '@/utils/id';
+import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc } from '@react-native-firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { WorkHistoryEntry } from '@/types/worker';
 
-export async function listWorkHistory(uid: string): Promise<WorkHistoryEntry[]> {
-  const raw = await AsyncStorage.getItem(storageKeys.workHistory(uid));
-  const entries = raw ? (JSON.parse(raw) as WorkHistoryEntry[]) : [];
-  return entries.sort((a, b) => (a.startDate < b.startDate ? 1 : -1));
+function workHistoryCollection(uid: string) {
+  return collection(db, 'workers', uid, 'workHistory');
 }
 
-async function persist(uid: string, entries: WorkHistoryEntry[]): Promise<void> {
-  await AsyncStorage.setItem(storageKeys.workHistory(uid), JSON.stringify(entries));
+export async function listWorkHistory(uid: string): Promise<WorkHistoryEntry[]> {
+  const snap = await getDocs(workHistoryCollection(uid));
+  const entries = snap.docs.map((d) => d.data() as WorkHistoryEntry);
+  return entries.sort((a, b) => (a.startDate < b.startDate ? 1 : -1));
 }
 
 export async function addWorkHistory(
   uid: string,
   input: Omit<WorkHistoryEntry, 'id'>,
 ): Promise<WorkHistoryEntry> {
-  const entries = await listWorkHistory(uid);
-  const entry: WorkHistoryEntry = { ...input, id: generateId() };
-  entries.push(entry);
-  await persist(uid, entries);
+  const ref = await addDoc(workHistoryCollection(uid), input);
+  const entry: WorkHistoryEntry = { ...input, id: ref.id };
+  await updateDoc(ref, { id: ref.id });
   return entry;
 }
 
@@ -29,18 +27,9 @@ export async function updateWorkHistory(
   id: string,
   patch: Partial<Omit<WorkHistoryEntry, 'id'>>,
 ): Promise<void> {
-  const entries = await listWorkHistory(uid);
-  const idx = entries.findIndex((e) => e.id === id);
-  if (idx >= 0) {
-    entries[idx] = { ...entries[idx]!, ...patch };
-    await persist(uid, entries);
-  }
+  await updateDoc(doc(workHistoryCollection(uid), id), patch);
 }
 
 export async function deleteWorkHistory(uid: string, id: string): Promise<void> {
-  const entries = await listWorkHistory(uid);
-  await persist(
-    uid,
-    entries.filter((e) => e.id !== id),
-  );
+  await deleteDoc(doc(workHistoryCollection(uid), id));
 }
