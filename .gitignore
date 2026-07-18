@@ -27,3 +27,6 @@ yarn-error.*
 # macOS
 .DS_Store
 *.pem
+
+# git worktrees
+.worktrees/
