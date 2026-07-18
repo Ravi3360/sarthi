@@ -1,12 +1,13 @@
-import { doc, getDoc, setDoc, updateDoc, arrayUnion } from '@react-native-firebase/firestore';
 import { signInAnonymously, signOut as firebaseSignOut } from '@react-native-firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { httpsCallable } from '@react-native-firebase/functions';
+import { auth, functions } from '@/lib/firebase';
 import { ensureWorker } from '@/services/workers';
 
 export const MOCK_OTP = '1234';
 
-function phoneIndexRef(mobile: string) {
-  return doc(db, 'phoneIndex', mobile);
+interface LinkWorkerAuthResponse {
+  uid: string;
+  isNew: boolean;
 }
 
 export async function sendOtp(mobile: string): Promise<{ success: true }> {
@@ -24,24 +25,21 @@ export async function verifyOtp(
     return { success: false, uid: null };
   }
 
-  const indexSnap = await getDoc(phoneIndexRef(mobile));
-  const credential = await signInAnonymously(auth);
-  const freshUid = credential.user.uid;
+  await signInAnonymously(auth);
 
-  if (indexSnap.exists()) {
-    // Returning worker: their real data lives under a uid from a previous
-    // anon session. Link this fresh anon session to that worker doc.
-    const resolvedUid = (indexSnap.data() as { uid: string }).uid;
-    await updateDoc(doc(db, 'workers', resolvedUid), {
-      linkedAuthUids: arrayUnion(freshUid),
-    });
-    return { success: true, uid: resolvedUid };
+  const linkWorkerAuth = httpsCallable<{ mobile: string }, LinkWorkerAuthResponse>(
+    functions,
+    'linkWorkerAuth',
+  );
+  const { data } = await linkWorkerAuth({ mobile });
+
+  if (data.isNew) {
+    // First-ever signup for this mobile: the fresh anon uid IS the worker id.
+    // This create is allowed directly by firestore.rules (auth.uid == uid).
+    await ensureWorker(data.uid, mobile);
   }
 
-  // First-ever signup for this mobile: the fresh anon uid IS the worker id.
-  await setDoc(phoneIndexRef(mobile), { uid: freshUid });
-  await ensureWorker(freshUid, mobile);
-  return { success: true, uid: freshUid };
+  return { success: true, uid: data.uid };
 }
 
 export async function signOut(): Promise<void> {

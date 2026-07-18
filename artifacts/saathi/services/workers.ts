@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc } from '@react-native-firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, limit, getDocs } from '@react-native-firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { WorkerProfile } from '@/types/worker';
 
@@ -113,4 +113,17 @@ export async function ensureWorker(uid: string, mobile: string): Promise<WorkerP
   const fresh = createEmptyWorker(uid, mobile);
   await setDoc(workerDocRef(uid), fresh);
   return fresh;
+}
+
+/**
+ * Resolves a worker by *any* linked anon-auth uid (the doc's own id, or any
+ * uid array-unioned in by a later phoneIndex-based re-login) — unlike
+ * getWorker(), which only matches the doc id. Used at app-boot time in
+ * AuthContext, where auth.currentUser.uid may be a later-linked uid, not
+ * the original doc id.
+ */
+export async function findWorkerByAuthUid(authUid: string): Promise<WorkerProfile | null> {
+  const q = query(collection(db, 'workers'), where('linkedAuthUids', 'array-contains', authUid), limit(1));
+  const snap = await getDocs(q);
+  return snap.empty ? null : (snap.docs[0].data() as WorkerProfile);
 }

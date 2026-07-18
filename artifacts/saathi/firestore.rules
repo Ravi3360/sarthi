@@ -2,8 +2,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /phoneIndex/{mobile} {
-      allow read: if true;
-      allow write: if false;
+      allow read: if true;   // contains only a uid pointer, no sensitive data on its own
+      allow write: if false; // written only by the linkWorkerAuth Cloud Function (Admin SDK, bypasses rules)
     }
 
     match /workers/{uid} {

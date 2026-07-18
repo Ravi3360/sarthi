@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useRef, useState 
 import { onAuthStateChanged } from '@react-native-firebase/auth';
 import { auth } from '@/lib/firebase';
 import * as authService from '@/services/auth';
-import { getWorker } from '@/services/workers';
+import { findWorkerByAuthUid } from '@/services/workers';
 
 interface AuthContextValue {
   uid: string | null;
@@ -34,8 +34,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
         return;
       }
-      const worker = await getWorker(user.uid);
-      setUid(user.uid);
+      const worker = await findWorkerByAuthUid(user.uid);
+      setUid(worker?.uid ?? user.uid);
       setMobile(worker?.mobile ?? null);
       setIsLoading(false);
     });
