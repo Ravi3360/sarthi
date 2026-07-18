@@ -326,8 +326,10 @@ Expected: terminal prints emulator URLs for Auth (`9099`), Firestore (`8080`), S
 
 ```bash
 cd artifacts/saathi
-npx firebase deploy --only firestore:rules,storage:rules
+npx firebase deploy --only firestore:rules,storage
 ```
+
+(Not `storage:rules` — for the `storage` product, the segment after `:` names a deploy *target* from `.firebaserc`, not a facet like `rules`; unlike `firestore:rules`/`firestore:indexes`, which the CLI special-cases, `storage:rules` is parsed as "only deploy target literally named `rules`", which doesn't exist, and fails with `Could not find rules for the following storage targets: rules`. Plain `storage` deploys rules for every configured storage target.)
 
 Expected: both deploys succeed. Check the Firebase console's Firestore → Rules and Storage → Rules tabs show the content from Steps 4/5.
 
