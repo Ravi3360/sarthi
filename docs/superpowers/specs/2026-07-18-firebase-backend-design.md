@@ -148,3 +148,15 @@ Firebase local Emulator Suite (Firestore + Auth + Storage) for development — n
 - `artifacts/api-server` / `lib/db` integration — untouched.
 - Production-hardened security rules (the `phoneIndex` open-read caveat is accepted for now).
 - Admin/employer-facing features.
+
+## Future migration note: real Phone Auth supersedes Decisions 2 & 7
+
+The `phoneIndex` lookup table and `linkedAuthUids` array (Decisions 2 and 7) exist **only** to work around anonymous-auth uids not being stable across sign-out/reinstall. Once real Firebase Phone Auth (actual SMS OTP) replaces the mock `1234` gate, this entire workaround is dropped, not carried forward:
+
+- Firebase Phone Auth issues a `uid` tied directly and permanently to the verified phone number — same number always resolves to the same `uid`, server-side, with no app-managed lookup table needed.
+- Delete the `phoneIndex` collection and the `linkedAuthUids` field entirely.
+- Security rules collapse to the standard form: `allow read, write: if request.auth.uid == uid` (no `resource.data.linkedAuthUids` check, no separate subcollection `get()` lookup).
+- `services/auth.ts` simplifies to just reading `auth.currentUser.uid` directly after Phone Auth completes — no lookup-then-swap-uid step.
+- The `mobile` field stays on `workers/{uid}` (useful for display/support), it just stops being used as a join key.
+
+This is the trigger condition for a follow-up spec, not something to build speculatively now.
