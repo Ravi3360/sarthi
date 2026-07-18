@@ -39,3 +39,6 @@ yarn-error.*
 .vercel
 
 .env
+
+# Firebase Admin SDK service account key (real secret — never commit)
+service-account.json
