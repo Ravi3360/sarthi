@@ -1,22 +1,16 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { storageKeys } from '@/services/storageKeys';
-import { generateId } from '@/utils/id';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion } from '@react-native-firebase/firestore';
+import { signInAnonymously, signOut as firebaseSignOut } from '@react-native-firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { ensureWorker } from '@/services/workers';
 
-/**
- * Phase 1 auth: MOCK_AUTH is always on for this build (no Firebase project
- * connected yet). Accepts OTP "123456" for any valid mobile number and
- * creates/finds a stable per-mobile uid on-device. Swapping in real Firebase
- * phone auth later only touches this file.
- */
-export const MOCK_AUTH = true;
-export const MOCK_OTP = '123456';
+export const MOCK_OTP = '1234';
 
-function uidForMobile(mobile: string): string {
-  return `mock-${mobile}`;
+function phoneIndexRef(mobile: string) {
+  return doc(db, 'phoneIndex', mobile);
 }
 
 export async function sendOtp(mobile: string): Promise<{ success: true }> {
-  // Simulated network delay so the UI feels real.
+  // Simulated network delay so the UI feels real. No real SMS is sent.
   await new Promise((resolve) => setTimeout(resolve, 600));
   return { success: true };
 }
@@ -29,19 +23,27 @@ export async function verifyOtp(
   if (otp !== MOCK_OTP) {
     return { success: false, uid: null };
   }
-  const uid = uidForMobile(mobile);
-  await AsyncStorage.setItem(storageKeys.currentUid, uid);
-  return { success: true, uid };
-}
 
-export async function getCurrentUid(): Promise<string | null> {
-  return AsyncStorage.getItem(storageKeys.currentUid);
+  const indexSnap = await getDoc(phoneIndexRef(mobile));
+  const credential = await signInAnonymously(auth);
+  const freshUid = credential.user.uid;
+
+  if (indexSnap.exists()) {
+    // Returning worker: their real data lives under a uid from a previous
+    // anon session. Link this fresh anon session to that worker doc.
+    const resolvedUid = (indexSnap.data() as { uid: string }).uid;
+    await updateDoc(doc(db, 'workers', resolvedUid), {
+      linkedAuthUids: arrayUnion(freshUid),
+    });
+    return { success: true, uid: resolvedUid };
+  }
+
+  // First-ever signup for this mobile: the fresh anon uid IS the worker id.
+  await setDoc(phoneIndexRef(mobile), { uid: freshUid });
+  await ensureWorker(freshUid, mobile);
+  return { success: true, uid: freshUid };
 }
 
 export async function signOut(): Promise<void> {
-  await AsyncStorage.removeItem(storageKeys.currentUid);
-}
-
-export function newLocalId(): string {
-  return generateId();
+  await firebaseSignOut(auth);
 }

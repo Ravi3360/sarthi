@@ -1,5 +1,8 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { onAuthStateChanged } from '@react-native-firebase/auth';
+import { auth } from '@/lib/firebase';
 import * as authService from '@/services/auth';
+import { getWorker } from '@/services/workers';
 
 interface AuthContextValue {
   uid: string | null;
@@ -16,14 +19,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [uid, setUid] = useState<string | null>(null);
   const [mobile, setMobile] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // While an explicit verifyOtp() call is resolving the real worker uid
+  // (which may differ from auth.currentUser.uid on a phoneIndex-based
+  // re-login, see services/auth.ts), ignore the onAuthStateChanged event
+  // that signInAnonymously() itself triggers, so the two don't race.
+  const resolvingLoginRef = useRef(false);
 
   useEffect(() => {
-    (async () => {
-      const existing = await authService.getCurrentUid();
-      setUid(existing);
-      if (existing) setMobile(existing.replace('mock-', ''));
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (resolvingLoginRef.current) return;
+      if (!user) {
+        setUid(null);
+        setMobile(null);
+        setIsLoading(false);
+        return;
+      }
+      const worker = await getWorker(user.uid);
+      setUid(user.uid);
+      setMobile(worker?.mobile ?? null);
       setIsLoading(false);
-    })();
+    });
+    return unsubscribe;
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -35,12 +51,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await authService.sendOtp(m);
       },
       verifyOtp: async (m: string, otp: string) => {
-        const result = await authService.verifyOtp(m, otp);
-        if (result.success && result.uid) {
-          setUid(result.uid);
-          setMobile(m);
+        resolvingLoginRef.current = true;
+        try {
+          const result = await authService.verifyOtp(m, otp);
+          if (result.success && result.uid) {
+            setUid(result.uid);
+            setMobile(m);
+          }
+          return result.success;
+        } finally {
+          resolvingLoginRef.current = false;
         }
-        return result.success;
       },
       signOut: async () => {
         await authService.signOut();
