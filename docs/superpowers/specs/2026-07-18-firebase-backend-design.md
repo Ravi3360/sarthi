@@ -13,7 +13,11 @@ No changes to `artifacts/api-server` or `lib/db` — they remain unused by SAATH
 
 ## Decisions
 
-1. **SDK**: Firebase JS SDK (`firebase` npm package, modular v9+ API). Pure JS, no native modules — keeps working in Expo Go exactly like today. (Rejected: `@react-native-firebase/*` — requires a custom dev client/EAS build, breaks plain `expo start`.)
+1. **SDK**: `@react-native-firebase/*` (native modules: `app`, `auth`, `firestore`, `storage`). **Revised from the originally approved Firebase JS SDK** — during plan-writing it was confirmed that the JS SDK's Firestore offline persistence (`persistentLocalCache`) is IndexedDB-based and does not work on React Native (only in browsers); real Firestore offline caching on RN only exists in the native SDK. Since offline support (Decision 6) matters more than keeping plain Expo Go, this trade is accepted:
+   - **Dev workflow changes**: plain `expo start` + Expo Go app no longer works once native Firebase modules are linked. Requires `expo-dev-client` + a custom dev client build, produced via **EAS Build** (`eas build --profile development`).
+   - **App identifier**: `com.saathi.app` set as both `ios.bundleIdentifier` and `android.package` in `app.json` (previously unset) — required to register native apps in the Firebase console and for the dev client build.
+   - Firestore offline persistence is native and **on by default** for `@react-native-firebase/firestore` — no extra persistence config needed (unlike the JS SDK, which needed explicit and RN-incompatible cache setup).
+   - API shape is the namespaced RNFirebase style (`auth().signInAnonymously()`, `firestore().collection(...).doc(...)`, `storage().ref(...)`), not the modular `firebase/*` functional API — referenced as such in the service-layer section below.
 
 2. **Auth**: Firebase Anonymous Authentication under a mock OTP gate.
    - `sendOtp` unchanged in shape (simulated delay, no real SMS).
@@ -94,7 +98,7 @@ No changes to `artifacts/api-server` or `lib/db` — they remain unused by SAATH
    ```
    Upload replaces any existing file at that path (matches today's one-file-per-type upsert semantics). After upload, the resulting download URL is written into the corresponding Firestore field (`photoUrl`, or the subcollection doc's `fileUrl`).
 
-6. **Offline persistence**: enabled. Firestore JS SDK's React Native persistence (`initializeFirestore` + `getReactNativePersistence`-backed local cache via AsyncStorage) so the app can read/write while offline and sync when back online — matches today's fully-offline UX and fits the target users' (blue-collar workers) patchy connectivity.
+6. **Offline persistence**: enabled, and free — `@react-native-firebase/firestore`'s native offline persistence is on by default (no config needed, per revised Decision 1), so the app can read/write while offline and sync when back online — matches today's fully-offline UX and fits the target users' (blue-collar workers) patchy connectivity.
 
 7. **Security rules** (core logic; test-mode-grade, not production-hardened):
    ```
@@ -117,19 +121,21 @@ No changes to `artifacts/api-server` or `lib/db` — they remain unused by SAATH
 
    Known caveat: `phoneIndex` open-read lets anyone enumerate `uid` for a known mobile number. Low sensitivity on its own (a bare uid grants nothing unless also present in `linkedAuthUids`), but flagged as a rule to harden once a real backend/auth layer exists.
 
-8. **Firebase project**: does not exist yet. Implementation plan must include console setup steps (create project, register web app, enable Firestore + Anonymous Auth + Storage, capture config into `.env`).
+8. **Firebase project**: does not exist yet. Implementation plan must include console setup steps: create project, register **native** iOS + Android apps under app id `com.saathi.app` (downloading `GoogleService-Info.plist` / `google-services.json`, referenced from `app.json`), enable Firestore + Anonymous Auth + Storage. No web app registration needed (native SDK, not the JS SDK).
+
+9. **Native build tooling**: EAS Build. `expo-dev-client` added as a dependency; `eas.json` gets a `development` build profile; developers run `eas build --profile development` once (and after any native dependency change) to produce an installable dev client, then `expo start --dev-client` for the normal iterate loop. Plain Expo Go no longer works for this app once native Firebase modules are linked.
 
 ## Service-layer changes
 
 Per the existing invariant already stated in `replit.md` ("swapping in real Firebase later only touches the `services/` layer"):
 
-- `lib/firebase.ts` (new) — `initializeApp`, `initializeFirestore` (with RN persistence), `getAuth` (with `getReactNativePersistence(AsyncStorage)`), `getStorage`. Config from `EXPO_PUBLIC_FIREBASE_*` env vars.
-- `services/auth.ts` — rewritten internals per Decision 2; same exported function signatures as today.
-- `services/workers.ts`, `documents.ts`, `income.ts`, `workHistory.ts`, `skills.ts` — internals swapped from AsyncStorage calls to Firestore (`getDoc`/`setDoc`/subcollection CRUD); same exported function signatures, so **no changes required in `app/*` screens or `context/*`**.
-- `services/documents.ts` — adds Storage upload step (`uploadBytes` → `getDownloadURL` → write Firestore doc).
+- `lib/firebase.ts` (new) — thin re-export of the RNFirebase default instances (`@react-native-firebase/app`, `auth`, `firestore`, `storage`); native config comes from the platform `GoogleService-Info.plist`/`google-services.json` files (auto-picked-up by the native SDK), not JS-side env vars.
+- `services/auth.ts` — rewritten internals per Decision 2, using `auth().signInAnonymously()` / `auth().signOut()` / `auth().onAuthStateChanged()`; same exported function signatures as today.
+- `services/workers.ts`, `documents.ts`, `income.ts`, `workHistory.ts`, `skills.ts` — internals swapped from AsyncStorage calls to Firestore (`firestore().collection(...).doc(...).get()/.set()/.update()`, subcollection CRUD); same exported function signatures, so **no changes required in `app/*` screens or `context/*`**.
+- `services/documents.ts` — adds Storage upload step (`storage().ref(path).putFile(uri)` → `.getDownloadURL()` → write Firestore doc).
 - `services/schemes.ts`, `services/jobs.ts` — switch from reading local seed arrays to reading their Firestore collections.
-- `scripts/seed-firestore.ts` (new) — one-time Admin SDK seed script.
-- `firestore.rules`, `storage.rules` (new, repo root) — deployed via Firebase CLI (`firebase deploy --only firestore:rules,storage:rules`).
+- `scripts/seed-firestore.ts` (new) — one-time **Admin SDK** (`firebase-admin`, plain Node.js via `tsx`, unaffected by the client-SDK choice above) seed script.
+- `firestore.rules`, `storage.rules` (new, inside `artifacts/saathi/`) — deployed via Firebase CLI (`firebase deploy --only firestore:rules,storage:rules`).
 - `types/worker.ts` — `WorkerProfile` flattened (Decision 3). This is the one change that ripples beyond the services layer: every screen currently reading `worker.personal.name`-style nested paths (the 12 onboarding steps + profile/edit screens) needs updating to the flat field names. This is the largest code-churn item in the plan.
 
 ## Migration-to-relational mapping (documented for later, not built now)
