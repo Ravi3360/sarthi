@@ -33,24 +33,24 @@ export default function ProfileScreen() {
       contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 120, gap: 20 }}
     >
       <View style={styles.headerCard}>
-        <Avatar uri={worker.personal.photoUrl} name={worker.personal.name || '?'} size={72} />
-        <Text style={[styles.name, { color: colors.foreground }]}>{worker.personal.name || 'नाम दर्ज नहीं'}</Text>
-        {worker.professional.occupation ? (
-          <Text style={{ color: colors.mutedForeground }}>{getOccupation(worker.professional.occupation)?.labelHi}</Text>
+        <Avatar uri={worker.photoUrl} name={worker.name || '?'} size={72} />
+        <Text style={[styles.name, { color: colors.foreground }]}>{worker.name || 'नाम दर्ज नहीं'}</Text>
+        {worker.occupation ? (
+          <Text style={{ color: colors.mutedForeground }}>{getOccupation(worker.occupation)?.labelHi}</Text>
         ) : null}
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-          {worker.profileMeta.verified.aadhaarVerified && <Badge label={t('profile.aadhaarVerified')} tone="success" />}
-          {worker.profileMeta.verified.policeVerified && <Badge label={t('profile.policeVerified')} tone="success" />}
+          {worker.aadhaarVerified && <Badge label={t('profile.aadhaarVerified')} tone="success" />}
+          {worker.policeVerified && <Badge label={t('profile.policeVerified')} tone="success" />}
         </View>
         <View style={{ marginTop: 12 }}>
-          <ProgressRing percent={worker.profileMeta.completionPercent} size={64} />
+          <ProgressRing percent={worker.completionPercent} size={64} />
         </View>
       </View>
 
       <Card>
-        <Row label="मोबाइल" value={`+91 ${worker.personal.mobile}`} />
-        <Row label="आधार" value={worker.personal.aadhaar ? maskAadhaar(worker.personal.aadhaar) : '—'} />
-        <Row label="पैन" value={worker.personal.pan ? maskPan(worker.personal.pan) : '—'} last />
+        <Row label="मोबाइल" value={`+91 ${worker.mobile}`} />
+        <Row label="आधार" value={worker.aadhaar ? maskAadhaar(worker.aadhaar) : '—'} />
+        <Row label="पैन" value={worker.pan ? maskPan(worker.pan) : '—'} last />
       </Card>
 
       <View style={{ gap: 10 }}>

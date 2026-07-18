@@ -9,11 +9,14 @@ export type Education =
   | 'higher_secondary'
   | 'graduate';
 
-export interface WorkerPersonal {
+export type SchemeApplicationStatus = 'not_started' | 'applied' | 'approved';
+
+export interface WorkerProfile {
+  uid: string;
+  mobile: string;
   name: string;
   gender: Gender | null;
   dob: string | null; // ISO date
-  mobile: string;
   aadhaar: string; // stored masked
   pan: string; // stored masked
   maritalStatus: MaritalStatus | null;
@@ -28,9 +31,7 @@ export interface WorkerPersonal {
   nativeVillage: string;
   disability: string; // '' means no, otherwise description
   photoUrl: string | null;
-}
 
-export interface WorkerProfessional {
   occupation: string;
   primarySkill: string;
   secondarySkills: string[];
@@ -40,49 +41,31 @@ export interface WorkerProfessional {
   availability: Availability | null;
   education: Education | null;
   languages: string[];
-}
 
-export interface WorkerFinancial {
   bankName: string;
   accountNoMasked: string;
   ifsc: string;
   upiId: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
-}
 
-export interface WorkerHealth {
   insuranceProvider: string;
   insuranceNo: string;
   govtSchemeStatus: string[];
   migrationStatus: MigrationStatus | null;
-}
 
-export interface WorkerVerified {
   policeVerified: boolean;
   aadhaarVerified: boolean;
-}
-
-export interface WorkerProfileMeta {
-  completionPercent: number;
-  verified: WorkerVerified;
   rating: number;
+  completionPercent: number;
   createdAt: string;
   updatedAt: string;
   lastCompletedStep: number; // 0 = none, 12 = fully onboarded
-}
 
-export interface WorkerProfile {
-  uid: string;
-  personal: WorkerPersonal;
-  professional: WorkerProfessional;
-  financial: WorkerFinancial;
-  health: WorkerHealth;
-  profileMeta: WorkerProfileMeta;
   schemeApplications: Record<string, SchemeApplicationStatus>;
+  /** Anonymous-auth uids authorized to read/write this doc. See services/auth.ts. */
+  linkedAuthUids: string[];
 }
-
-export type SchemeApplicationStatus = 'not_started' | 'applied' | 'approved';
 
 export type DocumentType =
   | 'aadhaar'
