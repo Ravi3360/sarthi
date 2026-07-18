@@ -1,11 +1,13 @@
-import { seedSchemes } from '@/constants/schemes';
+import { collection, doc, getDoc, getDocs } from '@react-native-firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { GovtScheme } from '@/types/scheme';
 
-/** Read-only seed data, mirroring the `govtSchemes` Firestore collection. */
 export async function listSchemes(): Promise<GovtScheme[]> {
-  return seedSchemes;
+  const snap = await getDocs(collection(db, 'govtSchemes'));
+  return snap.docs.map((d) => d.data() as GovtScheme);
 }
 
 export async function getScheme(id: string): Promise<GovtScheme | null> {
-  return seedSchemes.find((s) => s.id === id) ?? null;
+  const snap = await getDoc(doc(db, 'govtSchemes', id));
+  return snap.exists() ? (snap.data() as GovtScheme) : null;
 }

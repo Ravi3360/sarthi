@@ -1,28 +1,40 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { useWorker } from '@/context/WorkerContext';
-import { seedSchemes } from '@/constants/schemes';
+import { listSchemes } from '@/services/schemes';
 import { checkEligibility } from '@/utils/eligibility';
 import { Badge, Card, EmptyState, LoadingState } from '@/components/ui';
+import type { GovtScheme } from '@/types/scheme';
 
 export default function SchemesScreen() {
   const { t } = useTranslation();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { worker, isLoading } = useWorker();
+  const [schemes, setSchemes] = useState<GovtScheme[]>([]);
+  const [schemesLoading, setSchemesLoading] = useState(true);
 
-  if (isLoading || !worker) return <LoadingState label={t('common.loading') ?? undefined} />;
+  useFocusEffect(
+    useCallback(() => {
+      listSchemes().then((list) => {
+        setSchemes(list);
+        setSchemesLoading(false);
+      });
+    }, []),
+  );
 
-  const evaluated = seedSchemes.map((scheme) => ({ scheme, check: checkEligibility(scheme, worker) }));
+  if (isLoading || !worker || schemesLoading) return <LoadingState label={t('common.loading') ?? undefined} />;
+
+  const evaluated = schemes.map((scheme) => ({ scheme, check: checkEligibility(scheme, worker) }));
   const eligible = evaluated.filter((e) => e.check.eligible);
   const others = evaluated.filter((e) => !e.check.eligible);
 
-  if (seedSchemes.length === 0) {
+  if (schemes.length === 0) {
     return <EmptyState icon="shield" title={t('schemes.emptyTitle')} />;
   }
 

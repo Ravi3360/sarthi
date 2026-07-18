@@ -6,14 +6,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { useWorker } from '@/context/WorkerContext';
-import { seedSchemes } from '@/constants/schemes';
 import { checkEligibility } from '@/utils/eligibility';
 import { listJobs } from '@/services/jobs';
+import { listSchemes } from '@/services/schemes';
 import { listIncome } from '@/services/income';
 import { formatCurrency } from '@/utils/format';
 import { getOccupation } from '@/constants/occupations';
 import { Avatar, Card, IconTile, ProgressRing, LoadingState } from '@/components/ui';
 import type { JobListing } from '@/types/job';
+import type { GovtScheme } from '@/types/scheme';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -21,13 +22,19 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { worker, isLoading } = useWorker();
   const [jobs, setJobs] = useState<JobListing[]>([]);
+  const [schemes, setSchemes] = useState<GovtScheme[]>([]);
   const [monthTotal, setMonthTotal] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     if (!worker) return;
-    const [jobList, incomeList] = await Promise.all([listJobs(), listIncome(worker.uid)]);
+    const [jobList, incomeList, schemeList] = await Promise.all([
+      listJobs(),
+      listIncome(worker.uid),
+      listSchemes(),
+    ]);
     setJobs(jobList.slice(0, 3));
+    setSchemes(schemeList);
     const now = new Date();
     const total = incomeList
       .filter((e) => {
@@ -52,7 +59,7 @@ export default function HomeScreen() {
 
   if (isLoading || !worker) return <LoadingState label={t('common.loading') ?? undefined} />;
 
-  const eligibleSchemes = seedSchemes.filter((s) => checkEligibility(s, worker).eligible).slice(0, 3);
+  const eligibleSchemes = schemes.filter((s) => checkEligibility(s, worker).eligible).slice(0, 3);
 
   return (
     <ScrollView
