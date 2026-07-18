@@ -14,9 +14,14 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.saathi.app",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
-    "android": {},
+    "android": {
+      "package": "com.saathi.app",
+      "googleServicesFile": "./google-services.json"
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
@@ -28,11 +33,33 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static",
+            "forceStaticLinking": [
+              "RNFBApp",
+              "RNFBAuth",
+              "RNFBFirestore",
+              "RNFBStorage"
+            ]
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1f3fe893-b353-4058-bbf2-08043d45eec8"
+      }
+    },
+    "owner": "himiitd960s-team"
   }
 }
