@@ -13,6 +13,7 @@ import type { FieldDescriptor } from '@/constants/onboardingSteps';
 import { StepHeader, LoadingState, PrimaryButton } from '@/components/ui';
 import { FieldInput, ChipSelect, DateField, SelectField, Stepper, PhotoPickerField } from '@/components/forms';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
+import { uploadFile } from '@/services/storage';
 import type { WorkerProfile } from '@/types/worker';
 
 const sectionConfig: Record<string, { title: string; fields: FieldDescriptor[] }> = {
@@ -165,7 +166,16 @@ export default function EditSectionScreen() {
               );
             case 'photo':
               return (
-                <PhotoPickerField key={field.key} label={field.label} value={value ?? null} onChange={(uri) => set(field.key, uri)} circular={field.circular} />
+                <PhotoPickerField
+                  key={field.key}
+                  label={field.label}
+                  value={value ?? null}
+                  onChange={(uri) => {
+                    set(field.key, uri);
+                    uploadFile(`workers/${draft.uid}/photo.jpg`, uri).then((url) => set(field.key, url));
+                  }}
+                  circular={field.circular}
+                />
               );
             default:
               return null;

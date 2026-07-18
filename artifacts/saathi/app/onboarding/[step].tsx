@@ -15,6 +15,7 @@ import { isValidAadhaar, isValidIfsc, isValidPan } from '@/utils/validators';
 import { StepHeader, PrimaryButton, IconTile, LoadingState } from '@/components/ui';
 import { FieldInput, Stepper, ChipSelect, SelectField, DateField, ComboSelectField, BankSuggestField } from '@/components/forms';
 import { PhotoPickerField } from '@/components/forms';
+import { uploadFile } from '@/services/storage';
 import type { WorkerProfile } from '@/types/worker';
 
 /** English region name → Hindi state name mapping for GPS reverse-geocode */
@@ -258,7 +259,12 @@ export default function OnboardingStepScreen() {
                   key={field.key}
                   label={field.label}
                   value={value ?? null}
-                  onChange={(uri) => set(field.key, uri)}
+                  onChange={(uri) => {
+                    // Show the picked photo immediately; swap in the real
+                    // Storage URL once the upload finishes in the background.
+                    set(field.key, uri);
+                    uploadFile(`workers/${draft.uid}/photo.jpg`, uri).then((url) => set(field.key, url));
+                  }}
                   circular={field.circular}
                 />
               );

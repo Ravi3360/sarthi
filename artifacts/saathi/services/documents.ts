@@ -1,6 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { storageKeys } from '@/services/storageKeys';
-import { generateId } from '@/utils/id';
+import { collection, doc, getDocs, setDoc, deleteDoc } from '@react-native-firebase/firestore';
+import { db } from '@/lib/firebase';
+import { uploadFile } from '@/services/storage';
 import type { DocumentType, WorkerDocument } from '@/types/worker';
 
 export const documentTypes: DocumentType[] = [
@@ -14,48 +14,41 @@ export const documentTypes: DocumentType[] = [
   'health_card',
 ];
 
-export async function listDocuments(uid: string): Promise<WorkerDocument[]> {
-  const raw = await AsyncStorage.getItem(storageKeys.documents(uid));
-  return raw ? (JSON.parse(raw) as WorkerDocument[]) : [];
+function documentsCollection(uid: string) {
+  return collection(db, 'workers', uid, 'documents');
 }
 
-async function persist(uid: string, docs: WorkerDocument[]): Promise<void> {
-  await AsyncStorage.setItem(storageKeys.documents(uid), JSON.stringify(docs));
+export async function listDocuments(uid: string): Promise<WorkerDocument[]> {
+  const snap = await getDocs(documentsCollection(uid));
+  return snap.docs.map((d) => d.data() as WorkerDocument);
 }
 
 export async function upsertDocument(
   uid: string,
   input: {
     type: DocumentType;
-    fileUrl: string;
+    fileUri: string;
     fileName: string;
     mimeType: string;
   },
 ): Promise<WorkerDocument> {
-  const docs = await listDocuments(uid);
-  const existingIndex = docs.findIndex((d) => d.type === input.type);
-  const doc: WorkerDocument = {
-    id: existingIndex >= 0 ? docs[existingIndex]!.id : generateId(),
+  const extMatch = input.fileName.match(/\.[^.]+$/);
+  const ext = extMatch ? extMatch[0] : '';
+  const fileUrl = await uploadFile(`workers/${uid}/documents/${input.type}${ext}`, input.fileUri);
+
+  const document: WorkerDocument = {
+    id: input.type,
     type: input.type,
-    fileUrl: input.fileUrl,
+    fileUrl,
     fileName: input.fileName,
     mimeType: input.mimeType,
     uploadedAt: new Date().toISOString(),
     status: 'uploaded',
   };
-  if (existingIndex >= 0) {
-    docs[existingIndex] = doc;
-  } else {
-    docs.push(doc);
-  }
-  await persist(uid, docs);
-  return doc;
+  await setDoc(doc(documentsCollection(uid), input.type), document);
+  return document;
 }
 
 export async function deleteDocument(uid: string, type: DocumentType): Promise<void> {
-  const docs = await listDocuments(uid);
-  await persist(
-    uid,
-    docs.filter((d) => d.type !== type),
-  );
+  await deleteDoc(doc(documentsCollection(uid), type));
 }
