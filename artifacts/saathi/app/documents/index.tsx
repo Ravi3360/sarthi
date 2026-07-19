@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Feather } from '@expo/vector-icons';
@@ -74,13 +74,16 @@ export default function DocumentsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 12 }}>
+      <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 20, paddingBottom: 12 }}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
+          <Feather name="arrow-left" size={22} color={colors.foreground} />
+        </Pressable>
         <Text style={[styles.title, { color: colors.foreground }]}>{t('documents.title')}</Text>
         <Text style={{ color: colors.mutedForeground, marginTop: 4 }}>
           {t('documents.progress', { done: uploadedCount, total: documentTypes.length })}
         </Text>
       </View>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120, gap: 10 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, gap: 10 }}>
         {documentTypes.map((type) => {
           const doc = docs.find((d) => d.type === type);
           return (
@@ -113,6 +116,14 @@ export default function DocumentsScreen() {
 }
 
 const styles = StyleSheet.create({
+  backBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -8,
+    marginBottom: 4,
+  },
   title: {
     fontSize: 22,
     fontWeight: '700',

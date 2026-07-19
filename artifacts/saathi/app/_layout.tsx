@@ -32,10 +32,13 @@ function RootLayoutNav() {
       <Stack.Screen name="auth/otp" />
       <Stack.Screen name="onboarding/[step]" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="documents/index" />
       <Stack.Screen name="schemes/[id]" />
+      <Stack.Screen name="profile/index" />
       <Stack.Screen name="profile/edit/[section]" />
       <Stack.Screen name="skills/index" />
       <Stack.Screen name="skills/add" />
+      <Stack.Screen name="jobs/index" />
       <Stack.Screen name="jobs/[id]" />
     </Stack>
   );

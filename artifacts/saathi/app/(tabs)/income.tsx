@@ -96,7 +96,7 @@ export default function IncomeScreen() {
       </View>
 
       {tab === 'income' ? (
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120, gap: 16 }}>
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 140, gap: 16 }}>
           <View style={styles.statGrid}>
             <StatCard label={t('income.todayTotal')} value={formatCurrency(totals.today)} />
             <StatCard label={t('income.weekTotal')} value={formatCurrency(totals.week)} />
@@ -132,7 +132,7 @@ export default function IncomeScreen() {
           )}
         </ScrollView>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120, gap: 16 }}>
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 140, gap: 16 }}>
           <Card style={{ backgroundColor: colors.primaryTint, borderColor: colors.primaryTint }}>
             <Text style={{ color: colors.primaryDark, fontWeight: '600' }}>{t('workHistory.totalExperience')}</Text>
             <Text style={{ color: colors.primaryDark, fontSize: 22, fontWeight: '800', marginTop: 4 }}>

@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useColors } from '@/hooks/useColors';
 import { useWorker } from '@/context/WorkerContext';
 import { checkEligibility } from '@/utils/eligibility';
@@ -16,6 +17,21 @@ import { Avatar, Card, IconTile, ProgressRing, LoadingState } from '@/components
 import type { JobListing } from '@/types/job';
 import type { GovtScheme } from '@/types/scheme';
 
+// Decorative-only gradient pairs for the govt-scheme banner carousel — cycled
+// by index, not tied to the design-token palette (which is deliberately
+// warm-red/high-contrast for form UI, not banner variety).
+const BANNER_GRADIENTS: [string, string][] = [
+  ['#E31E24', '#8E1216'],
+  ['#F9A825', '#B36B00'],
+  ['#2E7D32', '#134E1A'],
+  ['#6A3FA0', '#3E1F63'],
+];
+
+const BANNER_CARD_WIDTH = 260;
+const BANNER_GAP = 12;
+const BANNER_STRIDE = BANNER_CARD_WIDTH + BANNER_GAP;
+const BANNER_AUTOPLAY_MS = 2500;
+
 export default function HomeScreen() {
   const { t } = useTranslation();
   const colors = useColors();
@@ -25,6 +41,26 @@ export default function HomeScreen() {
   const [schemes, setSchemes] = useState<GovtScheme[]>([]);
   const [monthTotal, setMonthTotal] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const bannerScrollRef = useRef<ScrollView>(null);
+  const bannerIndexRef = useRef(0);
+  const bannerTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startBannerAutoScroll = useCallback(() => {
+    if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
+    if (schemes.length <= 1) return;
+    bannerTimerRef.current = setInterval(() => {
+      const next = (bannerIndexRef.current + 1) % schemes.length;
+      bannerIndexRef.current = next;
+      bannerScrollRef.current?.scrollTo({ x: next * BANNER_STRIDE, animated: true });
+    }, BANNER_AUTOPLAY_MS);
+  }, [schemes.length]);
+
+  useEffect(() => {
+    startBannerAutoScroll();
+    return () => {
+      if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
+    };
+  }, [startBannerAutoScroll]);
 
   const load = useCallback(async () => {
     if (!worker) return;
@@ -64,11 +100,13 @@ export default function HomeScreen() {
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
-      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 120, paddingHorizontal: 20, gap: 20 }}
+      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 140, paddingHorizontal: 20, gap: 20 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >
       <View style={styles.headerRow}>
-        <Avatar uri={worker.photoUrl} name={worker.name || '?'} size={52} />
+        <Pressable onPress={() => router.push('/profile')} hitSlop={8}>
+          <Avatar uri={worker.photoUrl} name={worker.name || '?'} size={52} />
+        </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={[styles.greeting, { color: colors.foreground }]}>
             {t('home.greeting', { name: worker.name || 'साथी' })}
@@ -82,6 +120,39 @@ export default function HomeScreen() {
         <ProgressRing percent={worker.completionPercent} size={52} />
       </View>
 
+      {schemes.length > 0 && (
+        <ScrollView
+          ref={bannerScrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.bannerRow}
+          onScrollBeginDrag={() => {
+            if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
+          }}
+          onMomentumScrollEnd={(e) => {
+            bannerIndexRef.current = Math.round(e.nativeEvent.contentOffset.x / BANNER_STRIDE);
+            startBannerAutoScroll();
+          }}
+        >
+          {schemes.map((scheme, i) => {
+            const [from, to] = BANNER_GRADIENTS[i % BANNER_GRADIENTS.length];
+            return (
+              <Pressable key={scheme.id} onPress={() => router.push(`/schemes/${scheme.id}`)}>
+                <LinearGradient colors={[from, to]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.bannerCard}>
+                  <View style={styles.bannerIconWrap}>
+                    <Feather name={scheme.iconKey as any} size={22} color="#FFFFFF" />
+                  </View>
+                  <View>
+                    <Text style={styles.bannerCategory}>{scheme.category}</Text>
+                    <Text style={styles.bannerTitle} numberOfLines={2}>{scheme.nameHi}</Text>
+                  </View>
+                </LinearGradient>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
+
       {worker.completionPercent < 100 && (
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -91,7 +162,7 @@ export default function HomeScreen() {
               </Text>
               <Text
                 style={{ color: colors.primary, fontWeight: '700' }}
-                onPress={() => router.push('/(tabs)/profile')}
+                onPress={() => router.push('/profile')}
               >
                 {t('home.completeProfile')} →
               </Text>
@@ -104,7 +175,7 @@ export default function HomeScreen() {
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t('home.quickActions')}</Text>
         <View style={styles.grid}>
           <View style={styles.tileWrap}>
-            <IconTile icon="upload-cloud" label={t('home.uploadDocs')} onPress={() => router.push('/(tabs)/documents')} />
+            <IconTile icon="upload-cloud" label={t('home.uploadDocs')} onPress={() => router.push('/documents')} />
           </View>
           <View style={styles.tileWrap}>
             <IconTile icon="trending-up" label={t('home.addIncome')} onPress={() => router.push('/(tabs)/income')} />
@@ -113,7 +184,7 @@ export default function HomeScreen() {
             <IconTile icon="gift" label={t('home.viewSchemes')} onPress={() => router.push('/(tabs)/schemes')} />
           </View>
           <View style={styles.tileWrap}>
-            <IconTile icon="search" label={t('home.findJobs')} onPress={() => router.push('/(tabs)/income')} />
+            <IconTile icon="search" label={t('home.findJobs')} onPress={() => router.push('/jobs')} />
           </View>
         </View>
       </View>
@@ -198,5 +269,35 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  bannerRow: {
+    gap: BANNER_GAP,
+    paddingRight: 4,
+  },
+  bannerCard: {
+    width: BANNER_CARD_WIDTH,
+    height: 150,
+    borderRadius: 22,
+    padding: 18,
+    justifyContent: 'space-between',
+  },
+  bannerIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bannerCategory: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 3,
+  },
+  bannerTitle: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700',
   },
 });

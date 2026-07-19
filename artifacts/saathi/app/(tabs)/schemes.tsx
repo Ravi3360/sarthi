@@ -41,7 +41,7 @@ export default function SchemesScreen() {
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
-      contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 120, gap: 20 }}
+      contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 140, gap: 20 }}
     >
       <Text style={[styles.title, { color: colors.foreground }]}>{t('schemes.title')}</Text>
 
