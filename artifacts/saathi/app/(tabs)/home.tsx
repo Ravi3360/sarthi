@@ -91,7 +91,7 @@ export default function HomeScreen() {
               </Text>
               <Text
                 style={{ color: colors.primary, fontWeight: '700' }}
-                onPress={() => router.push(`/onboarding/${Math.min(worker.lastCompletedStep + 1, 12)}`)}
+                onPress={() => router.push('/(tabs)/profile')}
               >
                 {t('home.completeProfile')} →
               </Text>
