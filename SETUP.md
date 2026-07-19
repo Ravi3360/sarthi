@@ -8,6 +8,14 @@ Everything needed to get `master` running for development on a fresh machine, be
 - **Expo/EAS org** `himiitd960s-team` — needs to be invited as a member before `eas build`/`eas login` will work for you.
 - **Apple ID with a Developer account** — only if you're building for iOS (device registration + provisioning).
 
+**This is one shared project, not one-per-developer.** `saathi-11e20`'s Firestore database, Storage bucket, Auth users, and Cloud Function all belong to the Firebase project itself, not to whoever originally created it. Every developer connects to the exact same backend — there's no per-developer copy of the data. Adding a teammate means granting them access to this one project, not spinning up a new one.
+
+**Project owner: how to add a new developer**
+
+1. Firebase Console → `saathi-11e20` → ⚙️ Project settings → **Users and permissions** → "Add member" → their Google account email → **Editor** role (Owner only if they'll also manage billing/other members).
+2. Expo dashboard → `himiitd960s-team` org → Members → invite their Expo account email.
+3. If they'll need `service-account.json` (step 3 below): don't hand them your copy — once they have Editor access from step 1, they can generate their own key from the same Console → Service accounts tab. Separate keys per person means each can be revoked individually later without affecting anyone else, and Firebase's own logs show who generated which key.
+
 ## 1. Prerequisites
 
 - **Node.js 24** (the repo's stated target; Node 22 has also worked in practice, but 24 is what's pinned in the plan/spec docs — prefer it).
