@@ -177,23 +177,33 @@ since it's now called from two screens instead of one.
 No Firestore migration needed. `dob`/`aadhaar`/`pan` remain valid optional
 fields on `WorkerProfile`; existing stored values (if any) are simply no
 longer required or displayed as before. `lastCompletedStep` semantics change
-from "0–12, gate on 12" to "0–2, gate on 2" — existing workers with
-`lastCompletedStep` between 1 and 11 will read as "not yet done" and get
-redirected to onboarding step `min(lastCompletedStep+1, 2)`, i.e. step 2
-(occupation) or step 1, which is a reasonable one-time re-prompt given the
-step content itself has changed.
+from "0–12, gate on 12" to "0–2, gate on 2": the splash gate is
+`worker.lastCompletedStep >= TOTAL_ONBOARDING_STEPS` (now `2`). Only workers
+with `lastCompletedStep` 0 or 1 get redirected into onboarding (at step 1 or
+2 respectively); anyone with `lastCompletedStep` already `>= 2` — including
+legacy workers who got partway through the old 12-step wizard (e.g.
+`lastCompletedStep` 3–11, past the old step 2 but nowhere near finishing) —
+reads as done and goes straight to home. This was confirmed during
+implementation and is an intentional simplification: gating on step count
+alone, with no dependency on which fields the old wizard happened to have
+collected by that point.
 
 ## Risks / trade-offs
 
 - Workers who already finished the old 12-step onboarding
-  (`lastCompletedStep === 12`) will read as `>= TOTAL_ONBOARDING_STEPS` (now
-  2) and skip straight to home — correct, they're more onboarded than the
-  new bar requires.
-- Workers mid-way through the old wizard (`lastCompletedStep` 1–11) get
-  funneled back through the new, shorter step 1/2 — they may be asked for
-  name/gender/occupation again if they'd only gotten past step 1 originally,
-  but never lose already-saved data (draft always starts from the existing
-  `worker` doc).
+  (`lastCompletedStep === 12`) skip straight to home — correct, they're more
+  onboarded than the new bar requires.
+- Legacy workers with `lastCompletedStep` 2–11 (partway through the old
+  wizard) also skip straight to home, even though the old wizard's step 2
+  was "पहचान दस्तावेज़" (Aadhaar/PAN, now removed) and its step 7 was
+  occupation — a worker who stopped anywhere in that range may reach home
+  with `occupation: ''` unset, unlike a freshly onboarded worker who always
+  sets it in the new step 2. This is accepted as-is rather than adding a
+  stricter gate: occupation remains reachable from the home "complete
+  profile →" banner → Profile → पेशेवर जानकारी, and a shared/pre-launch
+  Firebase project makes this cohort small to nonexistent in practice. If
+  real legacy-partial worker docs turn up in production, revisit tightening
+  the gate to also require `!!worker.occupation`.
 - `completionPercent` will be low (~20%) for all newly onboarded workers
   until they visit Profile edit sections — this is the explicitly desired
   behavior, not a regression.
