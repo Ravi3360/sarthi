@@ -11,10 +11,9 @@ pnpm workspace, packages under `artifacts/*`, `lib/*`, `scripts`.
 ```
 artifacts/
   saathi/       Expo Router app — the product (see below)
-  api-server/   Express 5 + pino API server (port 5000; not yet wired to saathi)
 lib/
-  db/                Drizzle ORM schema + Postgres client
-  api-zod/           Zod schemas, used by api-server
+  db/                Drizzle ORM schema + Postgres client (unused by saathi)
+  api-zod/           Zod schemas (unused by saathi)
   api-spec/          openapi.yaml + orval codegen config
   api-client-react/  Generated React Query client (currently unused by saathi)
 scripts/        workspace-level utility scripts (post-merge hook, etc.)
@@ -37,11 +36,12 @@ Requires **pnpm** (npm/yarn lockfiles are actively rejected — see root `packag
 pnpm install
 ```
 
+For the full environment setup needed to actually run/build SAATHI on a new machine (Firebase credentials, EAS/Firebase CLI login, dev-client build, emulator vs. real project) — see **[SETUP.md](SETUP.md)**.
+
 ## Run
 
 ```
-pnpm --filter @workspace/saathi run dev     # SAATHI Expo app
-pnpm --filter @workspace/api-server run dev # API server (port 5000, unused by SAATHI for now)
+pnpm --filter @workspace/saathi run dev     # SAATHI Expo app (see SETUP.md — needs a dev-client build, not Expo Go)
 ```
 
 ## Build / typecheck
@@ -55,12 +55,12 @@ pnpm run build       # typecheck + build all packages
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
 - SAATHI: Expo Router (React Native), i18next/react-i18next (Hindi-first, `hi` default), Zod, react-native-svg
-- API: Express 5, DB: PostgreSQL + Drizzle ORM (not currently used by SAATHI)
+- Backend: Firebase (Firestore + Anonymous Auth + Storage + Cloud Functions), see SETUP.md
 
 ## Architecture decisions
 
 - **Firebase backend integrated.** Firestore (+ Anonymous Auth + Storage) via `@react-native-firebase/*` replaces the earlier `AsyncStorage` data layer. The data model matches the spec's intended paths (`workers/{uid}`, `documents`, `workHistory`, `income`, `skills`, `schemes`, `jobs`). A custom EAS dev client is now required (plain Expo Go no longer works, since native Firebase modules are linked). See `docs/superpowers/specs/2026-07-18-firebase-backend-design.md` for the full schema and integration details.
-- **Mock auth**: any valid 10-digit mobile number + OTP `1234` logs in; Firebase Anonymous Auth generates a stable uid linked to the phone number.
+- **Mock auth**: any valid 10-digit mobile number + OTP `123456` logs in; Firebase Anonymous Auth generates a stable uid linked to the phone number.
 - **Govt schemes and job listings are static seed data** (`constants/schemes.ts`, `constants/jobs.ts`), read-only for now — mirroring what would be Firestore collections later.
 - **Onboarding is fully data-driven**: a single `app/onboarding/[step].tsx` route renders whichever step config (from `constants/onboardingSteps.ts`) matches the URL param, instead of 12 near-duplicate screens.
 - Deviated from spec in two places for simplicity: plain `useState` + Zod validation instead of `react-hook-form`, and a small custom `View`-based bar chart instead of `react-native-gifted-charts`.

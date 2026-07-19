@@ -5,15 +5,15 @@ A Hindi-first mobile app (Expo/React Native) that gives Indian blue-collar worke
 ## Run & Operate
 
 - `pnpm --filter @workspace/saathi run dev` — run the SAATHI Expo app with custom EAS dev client (includes `--dev-client`; workflow: `artifacts/saathi: expo`)
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000, unused by SAATHI for now)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
+- Full environment setup (Firebase creds, EAS/Firebase CLI login, dev-client build) — see `SETUP.md`
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
 - SAATHI: Expo Router (React Native), i18next/react-i18next (Hindi-first, `hi` default), Zod, react-native-svg
-- API: Express 5, DB: PostgreSQL + Drizzle ORM (not currently used by SAATHI)
+- Backend: Firebase (Firestore + Anonymous Auth + Storage + Cloud Functions)
 
 ## Where things live
 
@@ -27,9 +27,9 @@ A Hindi-first mobile app (Expo/React Native) that gives Indian blue-collar worke
 
 ## Architecture decisions
 
-- **Firebase backend integrated.** Firestore + Anonymous Auth + Storage (via `@react-native-firebase/*`) are fully wired up, replacing the earlier `AsyncStorage` data layer. Authentication uses Firebase anonymous auth with phone verification; mock OTP is `1234`. See the main README and `docs/superpowers/specs/2026-07-18-firebase-backend-design.md` for schema details.
-- **Mock auth**: any valid 10-digit mobile number + OTP `1234` logs in; Firebase Anonymous Auth generates a stable uid linked to the phone number.
-- **Govt schemes and job listings are static seed data** (`constants/schemes.ts`, `constants/jobs.ts`), read-only for now — mirroring what would be Firestore collections later.
+- **Firebase backend integrated.** Firestore + Anonymous Auth + Storage + Cloud Functions (via `@react-native-firebase/*`) are fully wired up, replacing the earlier `AsyncStorage` data layer. Authentication uses Firebase anonymous auth with phone verification; mock OTP is `123456`. See the main README and `docs/superpowers/specs/2026-07-18-firebase-backend-design.md` for schema details.
+- **Mock auth**: any valid 10-digit mobile number + OTP `123456` logs in; Firebase Anonymous Auth generates a stable uid linked to the phone number.
+- **Govt schemes and job listings are read-only Firestore collections** (`govtSchemes`, `jobs`), seeded from `constants/schemes.ts`/`constants/jobs.ts` via `scripts/seed-firestore.ts` — see SETUP.md.
 - **Onboarding is fully data-driven**: a single `app/onboarding/[step].tsx` route renders whichever step config (from `constants/onboardingSteps.ts`) matches the URL param, keeping all 12 steps in one file instead of 12 near-duplicate screens.
 - Deviated from the original spec's exact stack in two places for simplicity: plain `useState` + Zod validation instead of `react-hook-form`, and a small custom `View`-based bar chart instead of `react-native-gifted-charts`.
 
