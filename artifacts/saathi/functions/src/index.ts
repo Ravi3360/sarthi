@@ -59,9 +59,67 @@ export const linkWorkerAuth = onCall<LinkWorkerAuthRequest, Promise<LinkWorkerAu
         // above would throw NOT_FOUND and this mobile number would be
         // permanently unable to sign in. Recreate the doc now, seeded with
         // both the original and current uid, instead of failing forever.
+        //
+        // This *returns* isNew: false, so the client's verifyOtp never calls
+        // ensureWorker() to backfill the rest of the fields -- meaning
+        // whatever we write here is the doc's final shape until the user
+        // edits their profile. It must therefore be a full WorkerProfile
+        // (mirroring services/workers.ts's createEmptyWorker field-for-field,
+        // duplicated here because there's no shared-types package between
+        // this Cloud Functions project and the RN app -- same reasoning as
+        // the duplicated LinkWorkerAuthResponse interface below), not just
+        // the identity fields. A partial doc crashes client code that
+        // assumes every WorkerProfile field is present (e.g.
+        // computeCompletionPercent's `w.languages.length`, or
+        // app/schemes/[id].tsx's `worker.schemeApplications[id]`).
+        const now = new Date().toISOString();
         await workerRef.set({
           uid: resolvedUid,
           mobile,
+          name: '',
+          gender: null,
+          dob: null,
+          aadhaar: '',
+          pan: '',
+          maritalStatus: null,
+          children: 0,
+          dependents: 0,
+          permanentAddress: '',
+          permanentState: '',
+          permanentDistrict: '',
+          currentAddress: '',
+          currentState: '',
+          currentDistrict: '',
+          nativeVillage: '',
+          disability: '',
+          photoUrl: null,
+          occupation: '',
+          primarySkill: '',
+          secondarySkills: [],
+          experienceYears: 0,
+          expectedSalary: null,
+          currentEmployer: '',
+          availability: null,
+          education: null,
+          languages: [],
+          bankName: '',
+          accountNoMasked: '',
+          ifsc: '',
+          upiId: '',
+          emergencyContactName: '',
+          emergencyContactPhone: '',
+          insuranceProvider: '',
+          insuranceNo: '',
+          govtSchemeStatus: [],
+          migrationStatus: null,
+          policeVerified: false,
+          aadhaarVerified: false,
+          rating: 0,
+          completionPercent: 0,
+          createdAt: now,
+          updatedAt: now,
+          lastCompletedStep: 0,
+          schemeApplications: {},
           linkedAuthUids: FieldValue.arrayUnion(resolvedUid, freshUid),
         });
       }

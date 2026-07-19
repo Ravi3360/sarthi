@@ -75,7 +75,7 @@ const REQUIRED_FIELD_CHECKS: Array<(w: WorkerProfile) => boolean> = [
   (w) => !!w.expectedSalary,
   (w) => !!w.availability,
   (w) => !!w.education,
-  (w) => w.languages.length > 0,
+  (w) => !!w.languages && w.languages.length > 0,
   (w) => !!w.bankName,
   (w) => !!w.accountNoMasked,
   (w) => !!w.emergencyContactName,
