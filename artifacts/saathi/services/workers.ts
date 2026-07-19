@@ -62,9 +62,6 @@ export function createEmptyWorker(uid: string, mobile: string): WorkerProfile {
 const REQUIRED_FIELD_CHECKS: Array<(w: WorkerProfile) => boolean> = [
   (w) => !!w.name,
   (w) => !!w.gender,
-  (w) => !!w.dob,
-  (w) => !!w.aadhaar,
-  (w) => !!w.pan,
   (w) => !!w.maritalStatus,
   (w) => !!w.photoUrl,
   (w) => !!w.permanentAddress,
