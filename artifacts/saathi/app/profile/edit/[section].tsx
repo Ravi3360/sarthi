@@ -6,14 +6,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useWorker } from '@/context/WorkerContext';
 import { useToast } from '@/context/ToastContext';
+import { useGpsAddressFill } from '@/hooks/useGpsAddressFill';
 import { indianStates } from '@/constants/states';
 import { workerLanguages } from '@/constants/languages';
-import { getPath, setPath } from '@/utils/objectPath';
+import { setPath } from '@/utils/objectPath';
 import type { FieldDescriptor } from '@/constants/onboardingSteps';
 import { StepHeader, LoadingState, PrimaryButton } from '@/components/ui';
-import { FieldInput, ChipSelect, DateField, SelectField, Stepper, PhotoPickerField } from '@/components/forms';
+import { FieldRenderer } from '@/components/FieldRenderer';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
-import { uploadFile } from '@/services/storage';
 import type { WorkerProfile } from '@/types/worker';
 
 const sectionConfig: Record<string, { title: string; fields: FieldDescriptor[] }> = {
@@ -22,18 +22,102 @@ const sectionConfig: Record<string, { title: string; fields: FieldDescriptor[] }
     fields: [
       { type: 'photo', key: 'photoUrl', label: 'फ़ोटो', circular: true, optional: true },
       { type: 'text', key: 'name', label: 'पूरा नाम', autoCapitalize: 'words' },
-      { type: 'date', key: 'dob', label: 'जन्म तिथि' },
+      {
+        type: 'chips',
+        key: 'gender',
+        label: 'लिंग',
+        options: [
+          { key: 'male', label: 'पुरुष' },
+          { key: 'female', label: 'महिला' },
+          { key: 'other', label: 'अन्य' },
+        ],
+      },
+      { type: 'date', key: 'dob', label: 'जन्म तिथि', optional: true },
+      {
+        type: 'chips',
+        key: 'maritalStatus',
+        label: 'वैवाहिक स्थिति',
+        options: [
+          { key: 'unmarried', label: 'अविवाहित' },
+          { key: 'married', label: 'विवाहित' },
+          { key: 'widowed', label: 'विधवा/विधुर' },
+          { key: 'divorced', label: 'तलाकशुदा' },
+        ],
+      },
+      { type: 'stepper', key: 'children', label: 'बच्चों की संख्या', min: 0, max: 15 },
+      { type: 'stepper', key: 'dependents', label: 'आश्रितों की संख्या', min: 0, max: 15 },
+      {
+        type: 'locationFill',
+        label: 'GPS से पता भरें (स्थायी)',
+        addressKey: 'permanentAddress',
+        stateKey: 'permanentState',
+        districtKey: 'permanentDistrict',
+      },
       { type: 'text', key: 'permanentAddress', label: 'स्थायी पता' },
-      { type: 'select', key: 'permanentState', label: 'राज्य', options: indianStates.map((s) => ({ key: s, label: s })) },
+      { type: 'select', key: 'permanentState', label: 'राज्य चुनें', options: indianStates.map((s) => ({ key: s, label: s })) },
+      {
+        type: 'comboSelect',
+        key: 'permanentDistrict',
+        label: 'जिला चुनें',
+        options: [],
+        parentKey: 'permanentState',
+        optional: true,
+      },
+      {
+        type: 'locationFill',
+        label: 'GPS से पता भरें (वर्तमान)',
+        addressKey: 'currentAddress',
+        stateKey: 'currentState',
+        districtKey: 'currentDistrict',
+      },
       { type: 'text', key: 'currentAddress', label: 'वर्तमान पता' },
+      {
+        type: 'select',
+        key: 'currentState',
+        label: 'राज्य चुनें (वर्तमान)',
+        options: indianStates.map((s) => ({ key: s, label: s })),
+        optional: true,
+      },
+      {
+        type: 'comboSelect',
+        key: 'currentDistrict',
+        label: 'जिला चुनें (वर्तमान)',
+        options: [],
+        parentKey: 'currentState',
+        optional: true,
+      },
+      { type: 'text', key: 'nativeVillage', label: 'मूल गाँव/शहर', optional: true },
     ],
   },
   professional: {
     title: 'पेशेवर जानकारी',
     fields: [
+      { type: 'occupationPicker', key: 'occupation', label: 'व्यवसाय चुनें' },
       { type: 'text', key: 'primarySkill', label: 'मुख्य कौशल' },
       { type: 'stepper', key: 'experienceYears', label: 'अनुभव (साल)', min: 0, max: 50 },
       { type: 'text', key: 'expectedSalary', label: 'अपेक्षित वेतन (₹)', keyboardType: 'numeric', prefix: '₹' },
+      {
+        type: 'chips',
+        key: 'availability',
+        label: 'उपलब्धता',
+        options: [
+          { key: 'full_time', label: 'फुल-टाइम' },
+          { key: 'part_time', label: 'पार्ट-टाइम' },
+          { key: 'on_call', label: 'ऑन-कॉल' },
+        ],
+      },
+      {
+        type: 'chips',
+        key: 'education',
+        label: 'शिक्षा',
+        options: [
+          { key: 'illiterate', label: 'निरक्षर' },
+          { key: 'primary', label: 'प्राथमिक' },
+          { key: 'secondary', label: 'माध्यमिक' },
+          { key: 'higher_secondary', label: 'उच्चतर माध्यमिक' },
+          { key: 'graduate', label: 'स्नातक+' },
+        ],
+      },
       { type: 'text', key: 'currentEmployer', label: 'वर्तमान नियोक्ता', optional: true },
       {
         type: 'chips',
@@ -58,6 +142,7 @@ const sectionConfig: Record<string, { title: string; fields: FieldDescriptor[] }
   health: {
     title: 'स्वास्थ्य व योजनाएँ',
     fields: [
+      { type: 'text', key: 'disability', label: 'दिव्यांगता (अगर कोई हो)', optional: true },
       { type: 'text', key: 'insuranceProvider', label: 'बीमा कंपनी', optional: true },
       { type: 'text', key: 'insuranceNo', label: 'बीमा नंबर', optional: true },
       {
@@ -82,6 +167,7 @@ export default function EditSectionScreen() {
   const showToast = useToast();
   const [draft, setDraft] = useState<WorkerProfile | null>(null);
   const [saving, setSaving] = useState(false);
+  const { fillFromGps, locating } = useGpsAddressFill(setDraft);
 
   useEffect(() => {
     if (worker) setDraft(worker);
@@ -118,69 +204,16 @@ export default function EditSectionScreen() {
         <StepHeader title={config.title} onBack={() => router.back()} />
       </View>
       <KeyboardAwareScrollViewCompat contentContainerStyle={styles.content} bottomOffset={40}>
-        {config.fields.map((field) => {
-          // locationFill is an action button with no key — skip in profile edit
-          if (field.type === 'locationFill') return null;
-          const value = getPath(draft, field.key);
-          switch (field.type) {
-            case 'text':
-              return (
-                <FieldInput
-                  key={field.key}
-                  label={field.label}
-                  value={value === null || value === undefined ? '' : String(value)}
-                  onChangeText={(text) => set(field.key, text)}
-                  keyboardType={field.keyboardType}
-                  maxLength={field.maxLength}
-                  prefix={field.prefix}
-                  autoCapitalize={field.autoCapitalize ?? 'none'}
-                />
-              );
-            case 'chips':
-              return (
-                <ChipSelect
-                  key={field.key}
-                  label={field.label}
-                  options={field.options}
-                  multi={field.multi}
-                  value={field.multi ? (Array.isArray(value) ? value : []) : value ? [value] : []}
-                  onChange={(vals) => set(field.key, field.multi ? vals : vals[0] ?? null)}
-                />
-              );
-            case 'stepper':
-              return (
-                <Stepper
-                  key={field.key}
-                  label={field.label}
-                  value={typeof value === 'number' ? value : 0}
-                  onChange={(v) => set(field.key, v)}
-                  min={field.min}
-                  max={field.max}
-                />
-              );
-            case 'date':
-              return <DateField key={field.key} label={field.label} value={value ?? null} onChange={(iso) => set(field.key, iso)} />;
-            case 'select':
-              return (
-                <SelectField key={field.key} label={field.label} value={value ?? null} options={field.options} onChange={(v) => set(field.key, v)} />
-              );
-            case 'photo':
-              return (
-                <PhotoPickerField
-                  key={field.key}
-                  label={field.label}
-                  value={value ?? null}
-                  onChange={(uri) => {
-                    set(field.key, uri);
-                    uploadFile(`workers/${draft.uid}/photo.jpg`, uri).then((url) => set(field.key, url));
-                  }}
-                  circular={field.circular}
-                />
-              );
-            default:
-              return null;
-          }
-        })}
+        {config.fields.map((field, fieldIdx) => (
+          <FieldRenderer
+            key={field.type === 'locationFill' ? `loc-${fieldIdx}` : field.key}
+            field={field}
+            draft={draft}
+            onChange={set}
+            onGpsFill={fillFromGps}
+            gpsLocating={locating}
+          />
+        ))}
       </KeyboardAwareScrollViewCompat>
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16, borderColor: colors.border }]}>
         <PrimaryButton label={t('common.save')} onPress={save} loading={saving} />
@@ -190,6 +223,6 @@ export default function EditSectionScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20, paddingBottom: 24, gap: 20 },
+  content: { paddingHorizontal: 20, paddingBottom: 24, gap: 14 },
   footer: { paddingHorizontal: 20, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
 });
