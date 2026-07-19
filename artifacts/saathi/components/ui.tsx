@@ -286,7 +286,7 @@ export function StepHeader({
 }) {
   const colors = useColors();
   return (
-    <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, gap: 12 }}>
+    <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, gap: 10 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         {onBack ? (
           <Pressable onPress={onBack} hitSlop={12} style={styles.iconBtn}>
@@ -328,7 +328,7 @@ export function EmptyState({
   return (
     <View style={styles.stateContainer}>
       <View style={[styles.stateIconWrap, { backgroundColor: colors.muted }]}>
-        <Feather name={icon} size={32} color={colors.mutedForeground} />
+        <Feather name={icon} size={26} color={colors.mutedForeground} />
       </View>
       <Text style={[styles.stateTitle, { color: colors.foreground }]}>{title}</Text>
       {subtitle && <Text style={[styles.stateSubtitle, { color: colors.mutedForeground }]}>{subtitle}</Text>}
@@ -356,7 +356,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
   return (
     <View style={styles.stateContainer}>
       <View style={[styles.stateIconWrap, { backgroundColor: colors.warningTint }]}>
-        <Feather name="alert-triangle" size={32} color={colors.warning} />
+        <Feather name="alert-triangle" size={26} color={colors.warning} />
       </View>
       <Text style={[styles.stateTitle, { color: colors.foreground }]}>{message}</Text>
       {onRetry && (
@@ -406,7 +406,7 @@ export function IconTile({
           ]}
         />
       )}
-      <Feather name={icon} size={36} color={selected ? colors.primaryDark : colors.foreground} />
+      <Feather name={icon} size={26} color={selected ? colors.primaryDark : colors.foreground} />
       <Text
         numberOfLines={2}
         style={{
@@ -475,9 +475,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   stateIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -494,13 +494,13 @@ const styles = StyleSheet.create({
   },
   tile: {
     width: '100%',
-    minHeight: 100,
+    minHeight: 84,
     borderRadius: 16,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    padding: 12,
+    gap: 6,
+    padding: 10,
   },
   tileDot: {
     position: 'absolute',
