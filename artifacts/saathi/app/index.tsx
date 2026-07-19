@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { useAuth } from '@/context/AuthContext';
 import { useWorker } from '@/context/WorkerContext';
+import { TOTAL_ONBOARDING_STEPS } from '@/constants/onboardingSteps';
 
 export default function SplashGate() {
   const { t } = useTranslation();
@@ -25,10 +26,10 @@ export default function SplashGate() {
     if (!uid) {
       return <Redirect href="/auth/language" />;
     }
-    if (worker && worker.completionPercent >= 60) {
+    if (worker && worker.lastCompletedStep >= TOTAL_ONBOARDING_STEPS) {
       return <Redirect href="/(tabs)/home" />;
     }
-    const nextStep = worker ? Math.min(worker.lastCompletedStep + 1, 12) : 1;
+    const nextStep = worker ? Math.min(worker.lastCompletedStep + 1, TOTAL_ONBOARDING_STEPS) : 1;
     return <Redirect href={`/onboarding/${nextStep}`} />;
   }
 
