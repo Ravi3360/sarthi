@@ -8,7 +8,6 @@ import { useColors } from '@/hooks/useColors';
 import { useAuth } from '@/context/AuthContext';
 import { useWorker } from '@/context/WorkerContext';
 import { getOccupation } from '@/constants/occupations';
-import { maskAadhaar, maskPan } from '@/utils/mask';
 import { Avatar, Badge, Card, LoadingState, ProgressRing, TextButton } from '@/components/ui';
 
 const sections: { key: string; label: string; icon: keyof typeof Feather.glyphMap }[] = [
@@ -48,9 +47,7 @@ export default function ProfileScreen() {
       </View>
 
       <Card>
-        <Row label="मोबाइल" value={`+91 ${worker.mobile}`} />
-        <Row label="आधार" value={worker.aadhaar ? maskAadhaar(worker.aadhaar) : '—'} />
-        <Row label="पैन" value={worker.pan ? maskPan(worker.pan) : '—'} last />
+        <Row label="मोबाइल" value={`+91 ${worker.mobile}`} last />
       </Card>
 
       <View style={{ gap: 10 }}>
