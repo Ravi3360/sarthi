@@ -3,7 +3,7 @@ import { httpsCallable } from '@react-native-firebase/functions';
 import { auth, functions } from '@/lib/firebase';
 import { ensureWorker } from '@/services/workers';
 
-export const MOCK_OTP = '1234';
+export const MOCK_OTP = '123456';
 
 interface LinkWorkerAuthResponse {
   uid: string;
