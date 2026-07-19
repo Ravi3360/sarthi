@@ -1,16 +1,17 @@
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { useWorker } from '@/context/WorkerContext';
 import { useToast } from '@/context/ToastContext';
-import { seedSchemes } from '@/constants/schemes';
+import { getScheme } from '@/services/schemes';
 import { checkEligibility } from '@/utils/eligibility';
 import { StepHeader, Badge, Card, LoadingState, PrimaryButton, SecondaryButton } from '@/components/ui';
 import type { SchemeApplicationStatus } from '@/types/worker';
+import type { GovtScheme } from '@/types/scheme';
 
 export default function SchemeDetailScreen() {
   const { t } = useTranslation();
@@ -19,8 +20,11 @@ export default function SchemeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { worker, isLoading, updateWorker } = useWorker();
   const showToast = useToast();
+  const [scheme, setScheme] = useState<GovtScheme | null>(null);
 
-  const scheme = seedSchemes.find((s) => s.id === id);
+  useEffect(() => {
+    if (id) getScheme(id).then(setScheme);
+  }, [id]);
 
   if (isLoading || !worker || !scheme) return <LoadingState label={t('common.loading') ?? undefined} />;
 

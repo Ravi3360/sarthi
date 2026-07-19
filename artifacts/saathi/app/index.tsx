@@ -25,10 +25,10 @@ export default function SplashGate() {
     if (!uid) {
       return <Redirect href="/auth/language" />;
     }
-    if (worker && worker.profileMeta.completionPercent >= 60) {
+    if (worker && worker.completionPercent >= 60) {
       return <Redirect href="/(tabs)/home" />;
     }
-    const nextStep = worker ? Math.min(worker.profileMeta.lastCompletedStep + 1, 12) : 1;
+    const nextStep = worker ? Math.min(worker.lastCompletedStep + 1, 12) : 1;
     return <Redirect href={`/onboarding/${nextStep}`} />;
   }
 

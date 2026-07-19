@@ -40,7 +40,7 @@ export default function DocumentsScreen() {
       if (source === 'pdf') {
         const file = await pickDocumentFile();
         if (!file) return;
-        await upsertDocument(worker.uid, { type: activeType, fileUrl: file.uri, fileName: file.name, mimeType: file.mimeType });
+        await upsertDocument(worker.uid, { type: activeType, fileUri: file.uri, fileName: file.name, mimeType: file.mimeType });
       } else {
         const permission =
           source === 'camera'
@@ -55,7 +55,7 @@ export default function DocumentsScreen() {
         const asset = result.assets[0];
         await upsertDocument(worker.uid, {
           type: activeType,
-          fileUrl: asset.uri,
+          fileUri: asset.uri,
           fileName: asset.fileName ?? `${activeType}.jpg`,
           mimeType: asset.mimeType ?? 'image/jpeg',
         });

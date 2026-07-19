@@ -6,14 +6,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { useWorker } from '@/context/WorkerContext';
-import { seedSchemes } from '@/constants/schemes';
 import { checkEligibility } from '@/utils/eligibility';
 import { listJobs } from '@/services/jobs';
+import { listSchemes } from '@/services/schemes';
 import { listIncome } from '@/services/income';
 import { formatCurrency } from '@/utils/format';
 import { getOccupation } from '@/constants/occupations';
 import { Avatar, Card, IconTile, ProgressRing, LoadingState } from '@/components/ui';
 import type { JobListing } from '@/types/job';
+import type { GovtScheme } from '@/types/scheme';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -21,13 +22,19 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { worker, isLoading } = useWorker();
   const [jobs, setJobs] = useState<JobListing[]>([]);
+  const [schemes, setSchemes] = useState<GovtScheme[]>([]);
   const [monthTotal, setMonthTotal] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     if (!worker) return;
-    const [jobList, incomeList] = await Promise.all([listJobs(), listIncome(worker.uid)]);
+    const [jobList, incomeList, schemeList] = await Promise.all([
+      listJobs(),
+      listIncome(worker.uid),
+      listSchemes(),
+    ]);
     setJobs(jobList.slice(0, 3));
+    setSchemes(schemeList);
     const now = new Date();
     const total = incomeList
       .filter((e) => {
@@ -52,7 +59,7 @@ export default function HomeScreen() {
 
   if (isLoading || !worker) return <LoadingState label={t('common.loading') ?? undefined} />;
 
-  const eligibleSchemes = seedSchemes.filter((s) => checkEligibility(s, worker).eligible).slice(0, 3);
+  const eligibleSchemes = schemes.filter((s) => checkEligibility(s, worker).eligible).slice(0, 3);
 
   return (
     <ScrollView
@@ -61,30 +68,30 @@ export default function HomeScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >
       <View style={styles.headerRow}>
-        <Avatar uri={worker.personal.photoUrl} name={worker.personal.name || '?'} size={52} />
+        <Avatar uri={worker.photoUrl} name={worker.name || '?'} size={52} />
         <View style={{ flex: 1 }}>
           <Text style={[styles.greeting, { color: colors.foreground }]}>
-            {t('home.greeting', { name: worker.personal.name || 'साथी' })}
+            {t('home.greeting', { name: worker.name || 'साथी' })}
           </Text>
-          {worker.professional.occupation ? (
+          {worker.occupation ? (
             <Text style={{ color: colors.mutedForeground, fontSize: 14 }}>
-              {getOccupation(worker.professional.occupation)?.labelHi}
+              {getOccupation(worker.occupation)?.labelHi}
             </Text>
           ) : null}
         </View>
-        <ProgressRing percent={worker.profileMeta.completionPercent} size={52} />
+        <ProgressRing percent={worker.completionPercent} size={52} />
       </View>
 
-      {worker.profileMeta.completionPercent < 100 && (
+      {worker.completionPercent < 100 && (
         <Card>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontWeight: '700', color: colors.foreground, marginBottom: 4 }}>
-                {t('profile.completion', { percent: worker.profileMeta.completionPercent })}
+                {t('profile.completion', { percent: worker.completionPercent })}
               </Text>
               <Text
                 style={{ color: colors.primary, fontWeight: '700' }}
-                onPress={() => router.push(`/onboarding/${Math.min(worker.profileMeta.lastCompletedStep + 1, 12)}`)}
+                onPress={() => router.push(`/onboarding/${Math.min(worker.lastCompletedStep + 1, 12)}`)}
               >
                 {t('home.completeProfile')} →
               </Text>

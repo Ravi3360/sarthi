@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "saathi-11e20"
+  },
+  "targets": {
+    "saathi-11e20": {
+      "storage": {
+        "default": [
+          "saathi-11e20.firebasestorage.app"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

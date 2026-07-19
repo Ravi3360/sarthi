@@ -1,13 +1,4 @@
-/**
- * AsyncStorage keys, structured to mirror the Firestore paths from the spec
- * so swapping in real Firebase later only touches this service layer.
- */
+/** AsyncStorage keys still used directly by the app (locale preference only — all worker data now lives in Firestore). */
 export const storageKeys = {
-  currentUid: 'saathi:currentUid',
   locale: 'saathi:locale',
-  worker: (uid: string) => `saathi:workers:${uid}`,
-  documents: (uid: string) => `saathi:workers:${uid}:documents`,
-  workHistory: (uid: string) => `saathi:workers:${uid}:workHistory`,
-  income: (uid: string) => `saathi:workers:${uid}:income`,
-  skills: (uid: string) => `saathi:workers:${uid}:skills`,
 };

@@ -13,30 +13,31 @@ import type { FieldDescriptor } from '@/constants/onboardingSteps';
 import { StepHeader, LoadingState, PrimaryButton } from '@/components/ui';
 import { FieldInput, ChipSelect, DateField, SelectField, Stepper, PhotoPickerField } from '@/components/forms';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
+import { uploadFile } from '@/services/storage';
 import type { WorkerProfile } from '@/types/worker';
 
 const sectionConfig: Record<string, { title: string; fields: FieldDescriptor[] }> = {
   personal: {
     title: 'व्यक्तिगत जानकारी',
     fields: [
-      { type: 'photo', key: 'personal.photoUrl', label: 'फ़ोटो', circular: true, optional: true },
-      { type: 'text', key: 'personal.name', label: 'पूरा नाम', autoCapitalize: 'words' },
-      { type: 'date', key: 'personal.dob', label: 'जन्म तिथि' },
-      { type: 'text', key: 'personal.permanentAddress', label: 'स्थायी पता' },
-      { type: 'select', key: 'personal.permanentState', label: 'राज्य', options: indianStates.map((s) => ({ key: s, label: s })) },
-      { type: 'text', key: 'personal.currentAddress', label: 'वर्तमान पता' },
+      { type: 'photo', key: 'photoUrl', label: 'फ़ोटो', circular: true, optional: true },
+      { type: 'text', key: 'name', label: 'पूरा नाम', autoCapitalize: 'words' },
+      { type: 'date', key: 'dob', label: 'जन्म तिथि' },
+      { type: 'text', key: 'permanentAddress', label: 'स्थायी पता' },
+      { type: 'select', key: 'permanentState', label: 'राज्य', options: indianStates.map((s) => ({ key: s, label: s })) },
+      { type: 'text', key: 'currentAddress', label: 'वर्तमान पता' },
     ],
   },
   professional: {
     title: 'पेशेवर जानकारी',
     fields: [
-      { type: 'text', key: 'professional.primarySkill', label: 'मुख्य कौशल' },
-      { type: 'stepper', key: 'professional.experienceYears', label: 'अनुभव (साल)', min: 0, max: 50 },
-      { type: 'text', key: 'professional.expectedSalary', label: 'अपेक्षित वेतन (₹)', keyboardType: 'numeric', prefix: '₹' },
-      { type: 'text', key: 'professional.currentEmployer', label: 'वर्तमान नियोक्ता', optional: true },
+      { type: 'text', key: 'primarySkill', label: 'मुख्य कौशल' },
+      { type: 'stepper', key: 'experienceYears', label: 'अनुभव (साल)', min: 0, max: 50 },
+      { type: 'text', key: 'expectedSalary', label: 'अपेक्षित वेतन (₹)', keyboardType: 'numeric', prefix: '₹' },
+      { type: 'text', key: 'currentEmployer', label: 'वर्तमान नियोक्ता', optional: true },
       {
         type: 'chips',
-        key: 'professional.languages',
+        key: 'languages',
         label: 'भाषाएँ',
         multi: true,
         options: workerLanguages.map((l) => ({ key: l, label: l })),
@@ -46,22 +47,22 @@ const sectionConfig: Record<string, { title: string; fields: FieldDescriptor[] }
   financial: {
     title: 'बैंक जानकारी',
     fields: [
-      { type: 'text', key: 'financial.bankName', label: 'बैंक का नाम' },
-      { type: 'text', key: 'financial.accountNoMasked', label: 'खाता नंबर', keyboardType: 'numeric' },
-      { type: 'text', key: 'financial.ifsc', label: 'IFSC कोड', autoCapitalize: 'characters' },
-      { type: 'text', key: 'financial.upiId', label: 'UPI आईडी', optional: true },
-      { type: 'text', key: 'financial.emergencyContactName', label: 'आपातकालीन संपर्क नाम', autoCapitalize: 'words' },
-      { type: 'text', key: 'financial.emergencyContactPhone', label: 'आपातकालीन संपर्क नंबर', keyboardType: 'phone-pad', maxLength: 10 },
+      { type: 'text', key: 'bankName', label: 'बैंक का नाम' },
+      { type: 'text', key: 'accountNoMasked', label: 'खाता नंबर', keyboardType: 'numeric' },
+      { type: 'text', key: 'ifsc', label: 'IFSC कोड', autoCapitalize: 'characters' },
+      { type: 'text', key: 'upiId', label: 'UPI आईडी', optional: true },
+      { type: 'text', key: 'emergencyContactName', label: 'आपातकालीन संपर्क नाम', autoCapitalize: 'words' },
+      { type: 'text', key: 'emergencyContactPhone', label: 'आपातकालीन संपर्क नंबर', keyboardType: 'phone-pad', maxLength: 10 },
     ],
   },
   health: {
     title: 'स्वास्थ्य व योजनाएँ',
     fields: [
-      { type: 'text', key: 'health.insuranceProvider', label: 'बीमा कंपनी', optional: true },
-      { type: 'text', key: 'health.insuranceNo', label: 'बीमा नंबर', optional: true },
+      { type: 'text', key: 'insuranceProvider', label: 'बीमा कंपनी', optional: true },
+      { type: 'text', key: 'insuranceNo', label: 'बीमा नंबर', optional: true },
       {
         type: 'chips',
-        key: 'health.migrationStatus',
+        key: 'migrationStatus',
         label: 'प्रवासन स्थिति',
         options: [
           { key: 'local', label: 'स्थानीय' },
@@ -165,7 +166,16 @@ export default function EditSectionScreen() {
               );
             case 'photo':
               return (
-                <PhotoPickerField key={field.key} label={field.label} value={value ?? null} onChange={(uri) => set(field.key, uri)} circular={field.circular} />
+                <PhotoPickerField
+                  key={field.key}
+                  label={field.label}
+                  value={value ?? null}
+                  onChange={(uri) => {
+                    set(field.key, uri);
+                    uploadFile(`workers/${draft.uid}/photo.jpg`, uri).then((url) => set(field.key, url));
+                  }}
+                  circular={field.circular}
+                />
               );
             default:
               return null;

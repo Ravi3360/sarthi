@@ -15,6 +15,7 @@ import { isValidAadhaar, isValidIfsc, isValidPan } from '@/utils/validators';
 import { StepHeader, PrimaryButton, IconTile, LoadingState } from '@/components/ui';
 import { FieldInput, Stepper, ChipSelect, SelectField, DateField, ComboSelectField, BankSuggestField } from '@/components/forms';
 import { PhotoPickerField } from '@/components/forms';
+import { uploadFile } from '@/services/storage';
 import type { WorkerProfile } from '@/types/worker';
 
 /** English region name → Hindi state name mapping for GPS reverse-geocode */
@@ -96,8 +97,8 @@ export default function OnboardingStepScreen() {
       if (field.type === 'locationFill') return true; // action button, not a data field
       if ('optional' in field && field.optional) return true;
       const value = getPath(draft, (field as any).key);
-      if ((field as any).key === 'personal.aadhaar') return isValidAadhaar(String(value ?? ''));
-      if ((field as any).key === 'personal.pan') return true; // optional handled above
+      if ((field as any).key === 'aadhaar') return isValidAadhaar(String(value ?? ''));
+      if ((field as any).key === 'pan') return true; // optional handled above
       if (Array.isArray(value)) return value.length > 0;
       if (typeof value === 'number') return true;
       return value !== null && value !== undefined && String(value).trim().length > 0;
@@ -118,10 +119,7 @@ export default function OnboardingStepScreen() {
     try {
       const nextStepDraft: WorkerProfile = {
         ...draft,
-        profileMeta: {
-          ...draft.profileMeta,
-          lastCompletedStep: Math.max(draft.profileMeta.lastCompletedStep, stepNumber),
-        },
+        lastCompletedStep: Math.max(draft.lastCompletedStep, stepNumber),
       };
       await updateWorker(() => nextStepDraft);
       if (stepNumber >= TOTAL_ONBOARDING_STEPS) {
@@ -169,15 +167,15 @@ export default function OnboardingStepScreen() {
           const value = getPath(draft, field.key);
           switch (field.type) {
             case 'text':
-              if (field.key === 'financial.bankName') {
+              if (field.key === 'bankName') {
                 return (
                   <BankSuggestField
                     key={field.key}
                     bankName={value === null || value === undefined ? '' : String(value)}
                     onBankNameChange={(text) => set(field.key, text)}
                     onIfscSelect={(bankName, ifsc) => {
-                      set('financial.bankName', bankName);
-                      set('financial.ifsc', ifsc);
+                      set('bankName', bankName);
+                      set('ifsc', ifsc);
                     }}
                   />
                 );
@@ -193,11 +191,11 @@ export default function OnboardingStepScreen() {
                   prefix={field.prefix}
                   autoCapitalize={field.autoCapitalize ?? 'none'}
                   error={
-                    field.key === 'personal.pan' && value
+                    field.key === 'pan' && value
                       ? isValidPan(String(value))
                         ? null
                         : 'सही पैन नंबर डालें'
-                      : field.key === 'financial.ifsc' && value
+                      : field.key === 'ifsc' && value
                         ? isValidIfsc(String(value))
                           ? null
                           : 'सही IFSC कोड डालें (जैसे SBIN0001234)'
@@ -261,7 +259,12 @@ export default function OnboardingStepScreen() {
                   key={field.key}
                   label={field.label}
                   value={value ?? null}
-                  onChange={(uri) => set(field.key, uri)}
+                  onChange={(uri) => {
+                    // Show the picked photo immediately; swap in the real
+                    // Storage URL once the upload finishes in the background.
+                    set(field.key, uri);
+                    uploadFile(`workers/${draft.uid}/photo.jpg`, uri).then((url) => set(field.key, url));
+                  }}
                   circular={field.circular}
                 />
               );

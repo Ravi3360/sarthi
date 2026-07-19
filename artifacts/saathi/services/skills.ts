@@ -1,34 +1,27 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { storageKeys } from '@/services/storageKeys';
-import { generateId } from '@/utils/id';
+import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc } from '@react-native-firebase/firestore';
+import { db } from '@/lib/firebase';
 import type { SkillEntry } from '@/types/worker';
 
-export async function listSkills(uid: string): Promise<SkillEntry[]> {
-  const raw = await AsyncStorage.getItem(storageKeys.skills(uid));
-  return raw ? (JSON.parse(raw) as SkillEntry[]) : [];
+function skillsCollection(uid: string) {
+  return collection(db, 'workers', uid, 'skills');
 }
 
-async function persist(uid: string, entries: SkillEntry[]): Promise<void> {
-  await AsyncStorage.setItem(storageKeys.skills(uid), JSON.stringify(entries));
+export async function listSkills(uid: string): Promise<SkillEntry[]> {
+  const snap = await getDocs(skillsCollection(uid));
+  return snap.docs.map((d) => d.data() as SkillEntry);
 }
 
 export async function addSkill(
   uid: string,
   input: Omit<SkillEntry, 'id'>,
 ): Promise<SkillEntry> {
-  const entries = await listSkills(uid);
-  const entry: SkillEntry = { ...input, id: generateId() };
-  entries.push(entry);
-  await persist(uid, entries);
-  return entry;
+  const ref = await addDoc(skillsCollection(uid), input);
+  await updateDoc(ref, { id: ref.id });
+  return { ...input, id: ref.id };
 }
 
 export async function deleteSkill(uid: string, id: string): Promise<void> {
-  const entries = await listSkills(uid);
-  await persist(
-    uid,
-    entries.filter((e) => e.id !== id),
-  );
+  await deleteDoc(doc(skillsCollection(uid), id));
 }
 
 export function computeSkillScore(entries: SkillEntry[]): number {

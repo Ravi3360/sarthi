@@ -28,6 +28,7 @@ export type FieldDescriptor =
       key: string;
       label: string;
       options: { key: string; label: string }[];
+      optional?: boolean;
     }
   | {
       type: "comboSelect";
@@ -66,13 +67,13 @@ export const onboardingSteps: OnboardingStep[] = [
     fields: [
       {
         type: "text",
-        key: "personal.name",
+        key: "name",
         label: "पूरा नाम",
         autoCapitalize: "words",
       },
       {
         type: "chips",
-        key: "personal.gender",
+        key: "gender",
         label: "लिंग",
         options: [
           { key: "male", label: "पुरुष" },
@@ -80,7 +81,7 @@ export const onboardingSteps: OnboardingStep[] = [
           { key: "other", label: "अन्य" },
         ],
       },
-      { type: "date", key: "personal.dob", label: "जन्म तिथि" },
+      { type: "date", key: "dob", label: "जन्म तिथि" },
     ],
   },
   {
@@ -89,14 +90,14 @@ export const onboardingSteps: OnboardingStep[] = [
     fields: [
       {
         type: "text",
-        key: "personal.aadhaar",
+        key: "aadhaar",
         label: "आधार नंबर",
         keyboardType: "numeric",
         maxLength: 12,
       },
       {
         type: "text",
-        key: "personal.pan",
+        key: "pan",
         label: "पैन नंबर (वैकल्पिक)",
         maxLength: 10,
         optional: true,
@@ -110,7 +111,7 @@ export const onboardingSteps: OnboardingStep[] = [
     fields: [
       {
         type: "chips",
-        key: "personal.maritalStatus",
+        key: "maritalStatus",
         label: "वैवाहिक स्थिति",
         options: [
           { key: "unmarried", label: "अविवाहित" },
@@ -121,14 +122,14 @@ export const onboardingSteps: OnboardingStep[] = [
       },
       {
         type: "stepper",
-        key: "personal.children",
+        key: "children",
         label: "बच्चों की संख्या",
         min: 0,
         max: 15,
       },
       {
         type: "stepper",
-        key: "personal.dependents",
+        key: "dependents",
         label: "आश्रितों की संख्या",
         min: 0,
         max: 15,
@@ -141,13 +142,13 @@ export const onboardingSteps: OnboardingStep[] = [
     fields: [
       {
         type: "photo",
-        key: "personal.photoUrl",
+        key: "photoUrl",
         label: "अपनी फ़ोटो लगाएँ",
         circular: true,
       },
       {
         type: "text",
-        key: "personal.disability",
+        key: "disability",
         label: "दिव्यांगता (अगर कोई हो)",
         optional: true,
       },
@@ -160,23 +161,23 @@ export const onboardingSteps: OnboardingStep[] = [
       {
         type: "locationFill",
         label: "GPS से पता भरें",
-        addressKey: "personal.permanentAddress",
-        stateKey: "personal.permanentState",
-        districtKey: "personal.permanentDistrict",
+        addressKey: "permanentAddress",
+        stateKey: "permanentState",
+        districtKey: "permanentDistrict",
       },
-      { type: "text", key: "personal.permanentAddress", label: "स्थायी पता" },
+      { type: "text", key: "permanentAddress", label: "स्थायी पता" },
       {
         type: "select",
-        key: "personal.permanentState",
+        key: "permanentState",
         label: "राज्य चुनें",
         options: indianStates.map((s) => ({ key: s, label: s })),
       },
       {
         type: "comboSelect",
-        key: "personal.permanentDistrict",
+        key: "permanentDistrict",
         label: "जिला चुनें",
         options: [],
-        parentKey: "personal.permanentState",
+        parentKey: "permanentState",
         optional: true,
       },
     ],
@@ -188,29 +189,29 @@ export const onboardingSteps: OnboardingStep[] = [
       {
         type: "locationFill",
         label: "GPS से पता भरें",
-        addressKey: "personal.currentAddress",
-        stateKey: "personal.currentState",
-        districtKey: "personal.currentDistrict",
+        addressKey: "currentAddress",
+        stateKey: "currentState",
+        districtKey: "currentDistrict",
       },
-      { type: "text", key: "personal.currentAddress", label: "वर्तमान पता" },
+      { type: "text", key: "currentAddress", label: "वर्तमान पता" },
       {
         type: "select",
-        key: "personal.currentState",
+        key: "currentState",
         label: "राज्य चुनें (वर्तमान)",
         options: indianStates.map((s) => ({ key: s, label: s })),
         optional: true,
-      } as any,
+      },
       {
         type: "comboSelect",
-        key: "personal.currentDistrict",
+        key: "currentDistrict",
         label: "जिला चुनें (वर्तमान)",
         options: [],
-        parentKey: "personal.currentState",
+        parentKey: "currentState",
         optional: true,
       },
       {
         type: "text",
-        key: "personal.nativeVillage",
+        key: "nativeVillage",
         label: "मूल गाँव/शहर",
         optional: true,
       },
@@ -222,7 +223,7 @@ export const onboardingSteps: OnboardingStep[] = [
     fields: [
       {
         type: "occupationPicker",
-        key: "professional.occupation",
+        key: "occupation",
         label: "व्यवसाय चुनें",
       },
     ],
@@ -231,10 +232,10 @@ export const onboardingSteps: OnboardingStep[] = [
     step: 8,
     title: "कौशल व अनुभव",
     fields: [
-      { type: "text", key: "professional.primarySkill", label: "मुख्य कौशल" },
+      { type: "text", key: "primarySkill", label: "मुख्य कौशल" },
       {
         type: "stepper",
-        key: "professional.experienceYears",
+        key: "experienceYears",
         label: "अनुभव (साल)",
         min: 0,
         max: 50,
@@ -247,14 +248,14 @@ export const onboardingSteps: OnboardingStep[] = [
     fields: [
       {
         type: "text",
-        key: "professional.expectedSalary",
+        key: "expectedSalary",
         label: "अपेक्षित वेतन (₹/महीना)",
         keyboardType: "numeric",
         prefix: "₹",
       },
       {
         type: "chips",
-        key: "professional.availability",
+        key: "availability",
         label: "उपलब्धता",
         options: [
           { key: "full_time", label: "फुल-टाइम" },
@@ -270,7 +271,7 @@ export const onboardingSteps: OnboardingStep[] = [
     fields: [
       {
         type: "chips",
-        key: "professional.education",
+        key: "education",
         label: "शिक्षा",
         options: [
           { key: "illiterate", label: "निरक्षर" },
@@ -282,7 +283,7 @@ export const onboardingSteps: OnboardingStep[] = [
       },
       {
         type: "chips",
-        key: "professional.languages",
+        key: "languages",
         label: "भाषाएँ",
         multi: true,
         options: workerLanguages.map((l) => ({ key: l, label: l })),
@@ -293,23 +294,23 @@ export const onboardingSteps: OnboardingStep[] = [
     step: 11,
     title: "बैंक जानकारी",
     fields: [
-      { type: "text", key: "financial.bankName", label: "बैंक का नाम" },
+      { type: "text", key: "bankName", label: "बैंक का नाम" },
       {
         type: "text",
-        key: "financial.accountNoMasked",
+        key: "accountNoMasked",
         label: "खाता नंबर",
         keyboardType: "numeric",
       },
       {
         type: "text",
-        key: "financial.ifsc",
+        key: "ifsc",
         label: "IFSC कोड",
         autoCapitalize: "characters",
         optional: true,
       },
       {
         type: "text",
-        key: "financial.upiId",
+        key: "upiId",
         label: "UPI आईडी (वैकल्पिक)",
         optional: true,
       },
@@ -321,20 +322,20 @@ export const onboardingSteps: OnboardingStep[] = [
     fields: [
       {
         type: "text",
-        key: "financial.emergencyContactName",
+        key: "emergencyContactName",
         label: "आपातकालीन संपर्क नाम",
         autoCapitalize: "words",
       },
       {
         type: "text",
-        key: "financial.emergencyContactPhone",
+        key: "emergencyContactPhone",
         label: "आपातकालीन संपर्क नंबर",
         keyboardType: "phone-pad",
         maxLength: 10,
       },
       {
         type: "chips",
-        key: "health.migrationStatus",
+        key: "migrationStatus",
         label: "प्रवासन स्थिति",
         options: [
           { key: "local", label: "स्थानीय" },

@@ -326,8 +326,10 @@ Expected: terminal prints emulator URLs for Auth (`9099`), Firestore (`8080`), S
 
 ```bash
 cd artifacts/saathi
-npx firebase deploy --only firestore:rules,storage:rules
+npx firebase deploy --only firestore:rules,storage
 ```
+
+(Not `storage:rules` — for the `storage` product, the segment after `:` names a deploy *target* from `.firebaserc`, not a facet like `rules`; unlike `firestore:rules`/`firestore:indexes`, which the CLI special-cases, `storage:rules` is parsed as "only deploy target literally named `rules`", which doesn't exist, and fails with `Could not find rules for the following storage targets: rules`. Plain `storage` deploys rules for every configured storage target.)
 
 Expected: both deploys succeed. Check the Firebase console's Firestore → Rules and Storage → Rules tabs show the content from Steps 4/5.
 
@@ -2207,4 +2209,367 @@ Update the "No Firebase yet" bullet under "Architecture decisions" to reflect th
 ```bash
 git add README.md replit.md
 git commit -m "docs: record Firebase backend integration in README and replit.md"
+```
+
+---
+
+## Task 11: Trusted server-side phone-index linking (Cloud Function) + cold-boot uid resolution fix
+
+**Why:** the final whole-branch review (post Task 10) found the current design cannot actually work end-to-end:
+
+1. `firestore.rules` sets `phoneIndex` to `allow write: if false`, but `services/auth.ts` writes it directly from the client on first-ever signup — the spec's own comment ("written only via trusted client logic") contradicts its own rule. Real deploys reject the write.
+2. On a returning-worker login, `services/auth.ts` does `updateDoc(workers/{resolvedUid}, { linkedAuthUids: arrayUnion(freshUid) })` — but at that moment `request.auth.uid == freshUid`, which is neither `resolvedUid` nor yet a member of `linkedAuthUids`. The `workers/{uid}` update rule can never admit this write; the client cannot bootstrap its own membership.
+3. `context/AuthContext.tsx`'s `onAuthStateChanged` resolves the worker via `getWorker(user.uid)` — a direct doc-id lookup. After a real re-login, the *persisted* anon session's uid is `freshUid`, which is only a member of `linkedAuthUids`, not a doc id. Every subsequent app launch (no further sign-out needed) fails to find the worker and silently creates a new empty one, orphaning the real profile.
+
+**Fix:** move the two trusted writes (phoneIndex create, `linkedAuthUids` arrayUnion) into a callable Cloud Function running under the Admin SDK — which bypasses Firestore rules entirely, so `firestore.rules` needs no loosening. Resolve the worker at boot time by an `array-contains` query on `linkedAuthUids` instead of a doc-id `get`, which works uniformly for both the original owner uid and every later-linked uid (no rule change needed either — Firestore permits a `list`/query when its filter is provably a subset of what the per-document rule allows, which an equality/array-contains filter against `request.auth.uid` satisfies).
+
+**Files:**
+- Create: `artifacts/saathi/functions/package.json`, `artifacts/saathi/functions/tsconfig.json`, `artifacts/saathi/functions/src/index.ts`, `artifacts/saathi/functions/.gitignore`
+- Modify: `artifacts/saathi/firebase.json` (add `functions` config + `functions` emulator port)
+- Modify: `artifacts/saathi/package.json`, `artifacts/saathi/app.json` (add `@react-native-firebase/functions`)
+- Modify: `artifacts/saathi/lib/firebase.ts` (export `functions`, wire emulator)
+- Modify: `artifacts/saathi/services/auth.ts` (call the Cloud Function instead of writing `phoneIndex`/`linkedAuthUids` directly)
+- Modify: `artifacts/saathi/services/workers.ts` (add `findWorkerByAuthUid`)
+- Modify: `artifacts/saathi/context/AuthContext.tsx` (resolve worker via `findWorkerByAuthUid` at boot)
+- Modify: `artifacts/saathi/firestore.rules` (comment only — the `phoneIndex`/`workers` rule *values* are unchanged; only the stale "trusted client logic" comment is wrong)
+- Modify: `docs/superpowers/specs/2026-07-18-firebase-backend-design.md` (Decision 7 + tech stack: record the Cloud Function as the trusted-write path, and the `array-contains` boot-resolution pattern)
+
+**Interfaces:**
+- Consumes: `db`, `auth` from `@/lib/firebase` (Task 3); `ensureWorker` from `@/services/workers` (Task 4).
+- Produces: `functions` export from `@/lib/firebase`; `findWorkerByAuthUid(authUid): Promise<WorkerProfile|null>` from `@/services/workers`; a deployed callable `linkWorkerAuth` Cloud Function. `services/auth.ts`'s `sendOtp`/`verifyOtp`/`signOut` signatures are unchanged — no caller outside this task's files needs to change.
+
+- [ ] **Step 1: Enable the Blaze (pay-as-you-go) billing plan (manual, console)**
+
+Cloud Functions — even a single low-traffic callable — require the project to be on the Blaze plan (Cloud Functions depend on Cloud Build/Artifact Registry, which aren't available on Spark). Firebase console → Project settings → Usage and billing → "Modify plan" → Blaze. This is a real, if typically small (free-tier-covered at this app's expected volume), cost implication — flagged here explicitly since earlier tasks in this plan had none.
+
+- [ ] **Step 2: Scaffold the Cloud Functions project**
+
+```bash
+cd artifacts/saathi
+mkdir -p functions/src
+```
+
+Create `artifacts/saathi/functions/package.json`:
+
+```json
+{
+  "name": "saathi-functions",
+  "private": true,
+  "main": "lib/index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "deploy": "npm run build && firebase deploy --only functions"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
+}
+```
+
+(`node: 20` is a Cloud Functions runtime version, independent of this repo's Node 24 dev-tooling constraint — verify against the currently-supported Cloud Functions Node runtimes at deploy time and adjust if 20 has since been deprecated.)
+
+Create `artifacts/saathi/functions/tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2020",
+    "outDir": "lib",
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "compileOnSave": true,
+  "include": ["src"]
+}
+```
+
+Create `artifacts/saathi/functions/.gitignore`:
+
+```
+lib/
+node_modules/
+```
+
+- [ ] **Step 3: Write the `linkWorkerAuth` callable function**
+
+Create `artifacts/saathi/functions/src/index.ts`:
+
+```ts
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { initializeApp } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+
+initializeApp();
+const db = getFirestore();
+
+interface LinkWorkerAuthRequest {
+  mobile: string;
+}
+
+interface LinkWorkerAuthResponse {
+  uid: string;
+  isNew: boolean;
+}
+
+/**
+ * Runs under Admin privileges (bypasses firestore.rules) so it can perform
+ * the two writes the client is intentionally not trusted to make directly:
+ * creating the phoneIndex/{mobile} pointer, and array-unioning a fresh
+ * anonymous-auth uid into an existing worker's linkedAuthUids before that
+ * uid is itself a member of the array (see Task 11 in the implementation
+ * plan for why the client-side version of this is impossible under rules).
+ */
+export const linkWorkerAuth = onCall<LinkWorkerAuthRequest, Promise<LinkWorkerAuthResponse>>(
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Must be signed in (anonymously) to link a phone number.');
+    }
+    const { mobile } = request.data;
+    if (typeof mobile !== 'string' || mobile.length === 0) {
+      throw new HttpsError('invalid-argument', 'mobile is required.');
+    }
+
+    const freshUid = request.auth.uid;
+    const phoneIndexRef = db.doc(`phoneIndex/${mobile}`);
+    const indexSnap = await phoneIndexRef.get();
+
+    if (indexSnap.exists) {
+      const resolvedUid = (indexSnap.data() as { uid: string }).uid;
+      await db.doc(`workers/${resolvedUid}`).update({
+        linkedAuthUids: FieldValue.arrayUnion(freshUid),
+      });
+      return { uid: resolvedUid, isNew: false };
+    }
+
+    await phoneIndexRef.set({ uid: freshUid });
+    return { uid: freshUid, isNew: true };
+  },
+);
+```
+
+- [ ] **Step 4: Add `functions` config to `firebase.json`**
+
+Modify `artifacts/saathi/firebase.json` — add a top-level `functions` key and a `functions` emulator port:
+
+```json
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": [
+    {
+      "target": "default",
+      "rules": "storage.rules"
+    }
+  ],
+  "functions": {
+    "source": "functions",
+    "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
+  },
+  "emulators": {
+    "auth": { "port": 9099 },
+    "firestore": { "port": 8080 },
+    "storage": { "port": 9199 },
+    "functions": { "port": 5001 },
+    "ui": { "enabled": true, "port": 4000 }
+  }
+}
+```
+
+(Also switches `storage` to the array form here as a side-fix — see the Task 2 Step 7 correction earlier in this plan: the object form with a bare `target` key is what the object-vs-array ambiguity in firebase-tools' config parsing was tripping over for the *deploy* command; the array form is the documented shape for target-based storage config and removes any ambiguity going forward, independent of the `--only` flag fix already applied.)
+
+- [ ] **Step 5: Install `@react-native-firebase/functions` and add the plugin**
+
+```bash
+cd artifacts/saathi
+npx expo install @react-native-firebase/functions
+```
+
+Add `"@react-native-firebase/functions"` to `app.json`'s `expo.plugins` array, alongside the other `@react-native-firebase/*` entries.
+
+- [ ] **Step 6: Wire `functions` into `lib/firebase.ts`**
+
+Modify `artifacts/saathi/lib/firebase.ts`:
+
+```ts
+import { getApp } from '@react-native-firebase/app';
+import { getAuth, connectAuthEmulator } from '@react-native-firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from '@react-native-firebase/firestore';
+import { getStorage, connectStorageEmulator } from '@react-native-firebase/storage';
+import { getFunctions, connectFunctionsEmulator } from '@react-native-firebase/functions';
+
+const app = getApp();
+
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+export const functions = getFunctions(app);
+
+/**
+ * Set EXPO_PUBLIC_USE_FIREBASE_EMULATOR=true (in a local .env, not committed)
+ * to point the app at `pnpm run emulators` instead of the real project.
+ * EXPO_PUBLIC_FIREBASE_EMULATOR_HOST defaults to localhost; on a physical
+ * device or Android emulator, set it to your machine's LAN IP.
+ */
+if (__DEV__ && process.env.EXPO_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
+  const host = process.env.EXPO_PUBLIC_FIREBASE_EMULATOR_HOST ?? 'localhost';
+  connectAuthEmulator(auth, `http://${host}:9099`);
+  connectFirestoreEmulator(db, host, 8080);
+  connectStorageEmulator(storage, host, 9199);
+  connectFunctionsEmulator(functions, host, 5001);
+}
+```
+
+- [ ] **Step 7: Rewrite `services/auth.ts`**
+
+Replace the whole file:
+
+```ts
+import { doc, getDoc, setDoc } from '@react-native-firebase/firestore';
+import { signInAnonymously, signOut as firebaseSignOut } from '@react-native-firebase/auth';
+import { httpsCallable } from '@react-native-firebase/functions';
+import { auth, functions } from '@/lib/firebase';
+import { ensureWorker } from '@/services/workers';
+
+export const MOCK_OTP = '1234';
+
+interface LinkWorkerAuthResponse {
+  uid: string;
+  isNew: boolean;
+}
+
+export async function sendOtp(mobile: string): Promise<{ success: true }> {
+  // Simulated network delay so the UI feels real. No real SMS is sent.
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  return { success: true };
+}
+
+export async function verifyOtp(
+  mobile: string,
+  otp: string,
+): Promise<{ success: boolean; uid: string | null }> {
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  if (otp !== MOCK_OTP) {
+    return { success: false, uid: null };
+  }
+
+  await signInAnonymously(auth);
+
+  const linkWorkerAuth = httpsCallable<{ mobile: string }, LinkWorkerAuthResponse>(
+    functions,
+    'linkWorkerAuth',
+  );
+  const { data } = await linkWorkerAuth({ mobile });
+
+  if (data.isNew) {
+    // First-ever signup for this mobile: the fresh anon uid IS the worker id.
+    // This create is allowed directly by firestore.rules (auth.uid == uid).
+    await ensureWorker(data.uid, mobile);
+  }
+
+  return { success: true, uid: data.uid };
+}
+
+export async function signOut(): Promise<void> {
+  await firebaseSignOut(auth);
+}
+```
+
+- [ ] **Step 8: Add `findWorkerByAuthUid` to `services/workers.ts`**
+
+Add this import and function to `artifacts/saathi/services/workers.ts` (keep everything else in the file unchanged):
+
+```ts
+import { doc, getDoc, setDoc, collection, query, where, limit, getDocs } from '@react-native-firebase/firestore';
+```
+
+```ts
+/**
+ * Resolves a worker by *any* linked anon-auth uid (the doc's own id, or any
+ * uid array-unioned in by a later phoneIndex-based re-login) — unlike
+ * getWorker(), which only matches the doc id. Used at app-boot time in
+ * AuthContext, where auth.currentUser.uid may be a later-linked uid, not
+ * the original doc id.
+ */
+export async function findWorkerByAuthUid(authUid: string): Promise<WorkerProfile | null> {
+  const q = query(collection(db, 'workers'), where('linkedAuthUids', 'array-contains', authUid), limit(1));
+  const snap = await getDocs(q);
+  return snap.empty ? null : (snap.docs[0].data() as WorkerProfile);
+}
+```
+
+- [ ] **Step 9: Update `context/AuthContext.tsx`'s boot resolution**
+
+Change the `onAuthStateChanged` callback to resolve via `findWorkerByAuthUid` instead of `getWorker`:
+
+```tsx
+import { findWorkerByAuthUid } from '@/services/workers';
+```
+
+```tsx
+      const worker = await findWorkerByAuthUid(user.uid);
+      setUid(worker?.uid ?? user.uid);
+      setMobile(worker?.mobile ?? null);
+      setIsLoading(false);
+```
+
+(Note: `setUid` now uses the *resolved* worker's doc-id uid, not `user.uid` — for a relinked returning worker these differ, and every other service function (`getWorker`, subcollection paths, etc.) keys off the doc-id uid, not the transient auth uid.)
+
+- [ ] **Step 10: Update the stale `firestore.rules` comment**
+
+The rule *values* for `phoneIndex` and `workers` are unchanged (Cloud Functions run under Admin SDK and bypass rules entirely — no loosening needed). Only fix the now-inaccurate comment in `artifacts/saathi/firestore.rules`:
+
+```
+match /phoneIndex/{mobile} {
+  allow read: if true;   // contains only a uid pointer, no sensitive data on its own
+  allow write: if false; // written only by the linkWorkerAuth Cloud Function (Admin SDK, bypasses rules)
+}
+```
+
+- [ ] **Step 11: Update the design spec**
+
+In `docs/superpowers/specs/2026-07-18-firebase-backend-design.md`, revise Decision 7's rules commentary and the tech-stack list to record that `phoneIndex` creation and the `linkedAuthUids` arrayUnion are performed by a callable Cloud Function (`functions/`, Admin SDK, Blaze plan required) rather than directly by the client, and that worker resolution at auth-boot time uses an `array-contains` query (`findWorkerByAuthUid`) rather than a direct doc-id `get`. Note this was a correction to a contradiction discovered during final review, not part of the original design.
+
+- [ ] **Step 12: Run typecheck**
+
+```bash
+pnpm --filter @workspace/saathi run typecheck
+cd functions && npx tsc --noEmit && cd ..
+```
+
+Expected: both pass with zero errors.
+
+- [ ] **Step 13: Manual verification (against the Firebase emulator, with functions running)**
+
+```bash
+pnpm run emulators
+```
+
+Confirm the emulator UI's Functions tab shows `linkWorkerAuth` loaded. With `EXPO_PUBLIC_USE_FIREBASE_EMULATOR=true`, run through: fresh mobile → OTP `1234` → confirm signup succeeds and `phoneIndex/{mobile}` + `workers/{uid}` appear in the emulator UI. Sign out, sign back in with the **same** mobile and OTP `1234` — confirm login succeeds, the *original* uid's data loads (not a fresh empty profile), and the worker doc's `linkedAuthUids` now has two entries. Force-quit and relaunch the app (simulating the persisted-session cold-boot case) — confirm the app still resolves to the original worker's data via the newest linked uid, not a fresh empty profile.
+
+- [ ] **Step 14: Deploy the function and redeploy rules to the real project (manual verification)**
+
+```bash
+cd artifacts/saathi
+npx firebase deploy --only firestore:rules,storage,functions
+```
+
+Expected: all three deploy successfully (Blaze plan from Step 1 required for the `functions` part). Repeat the same sign-out/sign-back-in/relaunch check from Step 13 against the real project.
+
+- [ ] **Step 15: Commit**
+
+```bash
+git add artifacts/saathi/functions artifacts/saathi/firebase.json artifacts/saathi/package.json artifacts/saathi/pnpm-lock.yaml artifacts/saathi/app.json artifacts/saathi/lib/firebase.ts artifacts/saathi/services/auth.ts artifacts/saathi/services/workers.ts artifacts/saathi/context/AuthContext.tsx artifacts/saathi/firestore.rules docs/superpowers/specs/2026-07-18-firebase-backend-design.md
+git commit -m "fix(saathi): move phoneIndex/linkedAuthUids writes to a trusted Cloud Function; resolve worker by linked uid at boot"
 ```
