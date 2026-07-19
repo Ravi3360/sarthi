@@ -39,7 +39,6 @@
       "expo-web-browser",
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
-      "@react-native-firebase/functions",
       [
         "expo-build-properties",
         {
