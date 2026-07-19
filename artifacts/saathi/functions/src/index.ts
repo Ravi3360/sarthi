@@ -23,6 +23,7 @@ interface LinkWorkerAuthResponse {
  * plan for why the client-side version of this is impossible under rules).
  */
 export const linkWorkerAuth = onCall<LinkWorkerAuthRequest, Promise<LinkWorkerAuthResponse>>(
+  { region: 'asia-south1' },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Must be signed in (anonymously) to link a phone number.');

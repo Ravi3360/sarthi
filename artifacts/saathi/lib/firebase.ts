@@ -9,7 +9,7 @@ const app = getApp();
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-export const functions = getFunctions(app);
+export const functions = getFunctions(app, 'asia-south1');
 
 /**
  * Set EXPO_PUBLIC_USE_FIREBASE_EMULATOR=true (in a local .env, not committed)
