@@ -37,10 +37,35 @@ export const linkWorkerAuth = onCall<LinkWorkerAuthRequest, Promise<LinkWorkerAu
     const indexSnap = await phoneIndexRef.get();
 
     if (indexSnap.exists) {
-      const resolvedUid = (indexSnap.data() as { uid: string }).uid;
-      await db.doc(`workers/${resolvedUid}`).update({
-        linkedAuthUids: FieldValue.arrayUnion(freshUid),
-      });
+      const resolvedUid = indexSnap.data()?.uid;
+      if (typeof resolvedUid !== 'string' || resolvedUid.length === 0) {
+        throw new HttpsError('internal', 'phoneIndex entry is malformed.');
+      }
+
+      const workerRef = db.doc(`workers/${resolvedUid}`);
+      const workerSnap = await workerRef.get();
+
+      if (workerSnap.exists) {
+        await workerRef.update({
+          linkedAuthUids: FieldValue.arrayUnion(freshUid),
+        });
+      } else {
+        // Self-heal: phoneIndex/{mobile} exists but workers/{resolvedUid}
+        // was never created. This happens when a prior call to this
+        // function already committed the phoneIndex write below, but the
+        // client's follow-on ensureWorker() create (which only runs on the
+        // isNew branch) never completed -- app killed/crashed/network drop
+        // before that write landed. Without this branch, workerRef.update()
+        // above would throw NOT_FOUND and this mobile number would be
+        // permanently unable to sign in. Recreate the doc now, seeded with
+        // both the original and current uid, instead of failing forever.
+        await workerRef.set({
+          uid: resolvedUid,
+          mobile,
+          linkedAuthUids: FieldValue.arrayUnion(resolvedUid, freshUid),
+        });
+      }
+
       return { uid: resolvedUid, isNew: false };
     }
 

@@ -27,19 +27,34 @@ export async function verifyOtp(
 
   await signInAnonymously(auth);
 
-  const linkWorkerAuth = httpsCallable<{ mobile: string }, LinkWorkerAuthResponse>(
-    functions,
-    'linkWorkerAuth',
-  );
-  const { data } = await linkWorkerAuth({ mobile });
+  try {
+    const linkWorkerAuth = httpsCallable<{ mobile: string }, LinkWorkerAuthResponse>(
+      functions,
+      'linkWorkerAuth',
+    );
+    const { data } = await linkWorkerAuth({ mobile });
 
-  if (data.isNew) {
-    // First-ever signup for this mobile: the fresh anon uid IS the worker id.
-    // This create is allowed directly by firestore.rules (auth.uid == uid).
-    await ensureWorker(data.uid, mobile);
+    if (data.isNew) {
+      // First-ever signup for this mobile: the fresh anon uid IS the worker id.
+      // This create is allowed directly by firestore.rules (auth.uid == uid).
+      await ensureWorker(data.uid, mobile);
+    }
+
+    return { success: true, uid: data.uid };
+  } catch (error) {
+    // linkWorkerAuth (network/cold-start/callable failure) or the
+    // follow-on ensureWorker create failed after signInAnonymously already
+    // durably persisted an anonymous session. Leaving that session in place
+    // would let AuthContext's boot-time findWorkerByAuthUid find nothing
+    // next launch and silently fabricate a brand-new blank worker doc --
+    // the exact orphaned-profile bug this task exists to prevent, just
+    // triggered by a network hiccup instead of a rules rejection. Sign the
+    // half-linked session back out so the app returns to a clean logged-out
+    // state, and re-throw so the caller sees a real, retry-able failure
+    // instead of it being swallowed.
+    await firebaseSignOut(auth);
+    throw error;
   }
-
-  return { success: true, uid: data.uid };
 }
 
 export async function signOut(): Promise<void> {

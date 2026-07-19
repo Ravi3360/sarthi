@@ -60,6 +60,14 @@ export default function OtpScreen() {
         return;
       }
       router.replace('/');
+    } catch {
+      // verifyOtp throws (rather than resolving success: false) specifically
+      // when linking the verified session to the worker record failed after
+      // sign-in (network/server issue), as opposed to a wrong OTP. Surface a
+      // distinct, retry-able error instead of letting this reject silently.
+      setError(t('common.somethingWrong'));
+      setDigits(Array(OTP_LENGTH).fill(''));
+      inputs.current[0]?.focus();
     } finally {
       setLoading(false);
     }
