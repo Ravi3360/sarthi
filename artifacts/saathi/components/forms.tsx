@@ -63,7 +63,7 @@ export function FieldInput({
           },
         ]}
       >
-        {icon && <Feather name={icon} size={20} color={colors.mutedForeground} />}
+        {icon && <Feather name={icon} size={18} color={colors.mutedForeground} />}
         {prefix && <Text style={{ fontSize: 16, color: colors.mutedForeground, fontWeight: '600' }}>{prefix}</Text>}
         <TextInput
           value={value}
@@ -565,6 +565,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     minHeight: Platform.select({ ios: 24, default: 44 }),
+    paddingVertical: 0,
+    includeFontPadding: false,
   },
   helperText: {
     fontSize: 13,
