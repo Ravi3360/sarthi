@@ -100,7 +100,7 @@ export default function HomeScreen() {
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
-      contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: 140, paddingHorizontal: 20, gap: 20 }}
+      contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 140, paddingHorizontal: 20, gap: 24 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >
       <View style={styles.headerRow}>
@@ -244,60 +244,69 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
   },
   greeting: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: '700',
+    lineHeight: 32,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 26,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: 16,
+    lineHeight: 32,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 16,
+    justifyContent: 'space-between',
   },
   tileWrap: {
-    width: '47%',
+    width: '48%',
   },
   schemeIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   bannerRow: {
     gap: BANNER_GAP,
-    paddingRight: 4,
+    paddingRight: 20,
   },
   bannerCard: {
     width: BANNER_CARD_WIDTH,
-    height: 150,
-    borderRadius: 22,
-    padding: 18,
+    height: 160,
+    borderRadius: 24,
+    padding: 20,
     justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
   },
   bannerIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.22)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   bannerCategory: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 13,
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 3,
+    marginBottom: 4,
   },
   bannerTitle: {
     color: '#FFFFFF',
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
+    lineHeight: 24,
   },
 });

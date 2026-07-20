@@ -38,8 +38,8 @@ export function FloatingTabBar() {
         {TABS.map((tab) => {
           const isFocused = pathname === `/${tab.key}`;
           return (
-            <Pressable key={tab.key} onPress={() => router.replace(tab.path)} style={styles.item} hitSlop={8}>
-              <Feather name={tab.icon} size={24} color={isFocused ? colors.primary : colors.mutedForeground} />
+            <Pressable key={tab.key} onPress={() => router.replace(tab.path)} style={styles.item} hitSlop={12}>
+              <Feather name={tab.icon} size={28} color={isFocused ? colors.primary : colors.mutedForeground} />
               <Text numberOfLines={1} style={[styles.label, { color: isFocused ? colors.primary : colors.mutedForeground }]}>
                 {t(tab.labelKey)}
               </Text>
@@ -57,24 +57,29 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopWidth: 1,
     overflow: 'hidden',
+    minHeight: 72,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingTop: 10,
+    paddingTop: 12,
+    paddingHorizontal: 8,
   },
   item: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
-    paddingHorizontal: 18,
-    minWidth: 68,
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    minHeight: 64,
+    flex: 1,
   },
   label: {
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '700',
+    lineHeight: 18,
   },
 });

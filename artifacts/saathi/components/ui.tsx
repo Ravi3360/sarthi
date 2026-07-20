@@ -395,6 +395,11 @@ export function IconTile({
           backgroundColor: selected ? colors.primaryTint : colors.card,
           borderColor: selected ? colors.primary : colors.border,
           opacity: pressed ? 0.8 : 1,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+          elevation: 2,
         },
       ]}
     >
@@ -406,15 +411,22 @@ export function IconTile({
           ]}
         />
       )}
-      <Feather name={icon} size={26} color={selected ? colors.primaryDark : colors.foreground} />
+      <View
+        style={[
+          styles.tileIconBg,
+          { backgroundColor: selected ? colors.primary : colors.primaryTint },
+        ]}
+      >
+        <Feather name={icon} size={28} color={selected ? '#FFFFFF' : colors.primary} />
+      </View>
       <Text
         numberOfLines={2}
         style={{
-          fontSize: 15,
+          fontSize: 16,
           fontWeight: '700',
           color: selected ? colors.primaryDark : colors.foreground,
           textAlign: 'center',
-          marginTop: 4,
+          marginTop: 6,
         }}
       >
         {label}
@@ -429,18 +441,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    minHeight: 52,
-    borderRadius: 14,
+    minHeight: 60,
+    borderRadius: 16,
     paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   buttonLabel: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
   },
   card: {
     borderRadius: 16,
     borderWidth: 1,
-    padding: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   badge: {
     paddingHorizontal: 10,
@@ -494,13 +516,20 @@ const styles = StyleSheet.create({
   },
   tile: {
     width: '100%',
-    minHeight: 84,
+    minHeight: 120,
     borderRadius: 16,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    padding: 10,
+    gap: 8,
+    padding: 16,
+  },
+  tileIconBg: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tileDot: {
     position: 'absolute',
