@@ -17,6 +17,38 @@ import type { IncomeEntry, WorkHistoryEntry } from '@/types/worker';
 
 type Tab = 'income' | 'history';
 
+function IncomeEntryCard({ entry }: { entry: IncomeEntry }) {
+  const colors = useColors();
+  const { t } = useTranslation();
+  return (
+    <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={[styles.iconWrap, { backgroundColor: colors.primaryTint }]}>
+        <Feather name={entry.mode === 'upi' ? 'smartphone' : 'dollar-sign'} size={22} color={colors.primaryDark} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontWeight: '700', color: colors.foreground, fontSize: 18 }}>{formatCurrency(entry.amount)}</Text>
+        <Text style={{ color: colors.mutedForeground, fontSize: 16, marginTop: 4 }}>
+          {entry.sourceName || (entry.source === 'employer' ? t('income.employer') : t('income.contractor'))} · {formatDateHi(entry.date)}
+        </Text>
+      </View>
+    </Card>
+  );
+}
+
+function WorkHistoryEntryCard({ entry }: { entry: WorkHistoryEntry }) {
+  const colors = useColors();
+  return (
+    <Card>
+      <Text style={{ fontWeight: '700', color: colors.foreground, fontSize: 18 }}>{entry.role}</Text>
+      <Text style={{ color: colors.mutedForeground, marginTop: 4, fontSize: 16 }}>{entry.employer} · {entry.location}</Text>
+      <Text style={{ color: colors.primary, fontWeight: '700', marginTop: 8, fontSize: 18 }}>{formatCurrency(entry.salary)}/महीना</Text>
+      <Text style={{ color: colors.mutedForeground, fontSize: 14, marginTop: 6 }}>
+        {formatDateHi(entry.startDate)} — {entry.endDate ? formatDateHi(entry.endDate) : 'अभी तक'}
+      </Text>
+    </Card>
+  );
+}
+
 export default function IncomeScreen() {
   const { t } = useTranslation();
   const colors = useColors();
@@ -114,19 +146,9 @@ export default function IncomeScreen() {
           {income.length === 0 ? (
             <EmptyState icon="dollar-sign" title={t('income.emptyTitle')} subtitle={t('income.emptySubtitle') ?? undefined} />
           ) : (
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: 12 }}>
               {income.map((entry) => (
-                <Card key={entry.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={[styles.iconWrap, { backgroundColor: colors.primaryTint }]}>
-                    <Feather name={entry.mode === 'upi' ? 'smartphone' : 'dollar-sign'} size={18} color={colors.primaryDark} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontWeight: '700', color: colors.foreground }}>{formatCurrency(entry.amount)}</Text>
-                    <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>
-                      {entry.sourceName || (entry.source === 'employer' ? t('income.employer') : t('income.contractor'))} · {formatDateHi(entry.date)}
-                    </Text>
-                  </View>
-                </Card>
+                <IncomeEntryCard key={entry.id} entry={entry} />
               ))}
             </View>
           )}
@@ -145,16 +167,9 @@ export default function IncomeScreen() {
           {history.length === 0 ? (
             <EmptyState icon="briefcase" title={t('workHistory.emptyTitle')} subtitle={t('workHistory.emptySubtitle') ?? undefined} />
           ) : (
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: 12 }}>
               {history.map((entry) => (
-                <Card key={entry.id}>
-                  <Text style={{ fontWeight: '700', color: colors.foreground }}>{entry.role}</Text>
-                  <Text style={{ color: colors.mutedForeground, marginTop: 2 }}>{entry.employer} · {entry.location}</Text>
-                  <Text style={{ color: colors.primary, fontWeight: '700', marginTop: 6 }}>{formatCurrency(entry.salary)}/महीना</Text>
-                  <Text style={{ color: colors.mutedForeground, fontSize: 12, marginTop: 4 }}>
-                    {formatDateHi(entry.startDate)} — {entry.endDate ? formatDateHi(entry.endDate) : 'अभी तक'}
-                  </Text>
-                </Card>
+                <WorkHistoryEntryCard key={entry.id} entry={entry} />
               ))}
             </View>
           )}
@@ -187,7 +202,7 @@ export default function IncomeScreen() {
   );
 }
 
-function StatCard({ label, value, tone, highlight }: { label: string; value: string; tone?: 'warning'; highlight?: boolean }) {
+const StatCard = React.memo(function StatCard({ label, value, tone, highlight }: { label: string; value: string; tone?: 'warning'; highlight?: boolean }) {
   const colors = useColors();
   return (
     <View
@@ -199,22 +214,22 @@ function StatCard({ label, value, tone, highlight }: { label: string; value: str
         },
       ]}
     >
-      <Text style={{ color: colors.mutedForeground, fontSize: 12, fontWeight: '600' }}>{label}</Text>
+      <Text style={{ color: colors.mutedForeground, fontSize: 14, fontWeight: '600' }}>{label}</Text>
       <Text
         style={{
           color: highlight ? colors.primaryDark : tone === 'warning' ? colors.warning : colors.foreground,
-          fontSize: 18,
+          fontSize: 24,
           fontWeight: '800',
-          marginTop: 4,
+          marginTop: 6,
         }}
       >
         {value}
       </Text>
     </View>
   );
-}
+});
 
-function BarChart({ data }: { data: { label: string; value: number }[] }) {
+const BarChart = React.memo(function BarChart({ data }: { data: { label: string; value: number }[] }) {
   const colors = useColors();
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
@@ -229,12 +244,12 @@ function BarChart({ data }: { data: { label: string; value: number }[] }) {
               borderRadius: 6,
             }}
           />
-          <Text style={{ fontSize: 10, color: colors.mutedForeground }}>{d.label}</Text>
+          <Text style={{ fontSize: 12, color: colors.mutedForeground, fontWeight: '500' }}>{d.label}</Text>
         </View>
       ))}
     </View>
   );
-}
+});
 
 function IncomeSheet({
   visible,
@@ -343,8 +358,8 @@ function WorkHistorySheet({
 }
 
 const styles = StyleSheet.create({
-  statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  statCard: { width: '47%', borderRadius: 14, borderWidth: 1, padding: 14 },
-  iconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  sheetTitle: { fontSize: 18, fontWeight: '700' },
+  statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  statCard: { width: '47%', borderRadius: 16, borderWidth: 1, padding: 16 },
+  iconWrap: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  sheetTitle: { fontSize: 20, fontWeight: '700' },
 });
