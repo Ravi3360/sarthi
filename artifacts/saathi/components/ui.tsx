@@ -419,7 +419,15 @@ export function GradientBanner({
   onPress?: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} hitSlop={12}>
+    <Pressable
+      onPress={onPress}
+      hitSlop={12}
+      style={({ pressed }) => [
+        {
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
+      ]}
+    >
       <LinearGradient
         colors={gradient}
         start={{ x: 0, y: 0 }}
@@ -428,10 +436,10 @@ export function GradientBanner({
           styles.gradientBanner,
           {
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 8,
-            elevation: 5,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.25,
+            shadowRadius: 12,
+            elevation: 8,
           },
         ]}
       >

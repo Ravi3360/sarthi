@@ -218,21 +218,24 @@ export default function HomeScreen() {
       {eligibleSchemes.length > 0 && (
         <View>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t('home.eligibleSchemes')}</Text>
-          <View style={{ gap: 10 }}>
-            {eligibleSchemes.map((scheme) => (
-              <Card key={scheme.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View style={[styles.schemeIcon, { backgroundColor: colors.successTint }]}>
-                  <Feather name={scheme.iconKey as any} size={20} color={colors.success} />
-                </View>
-                <Text
-                  style={{ flex: 1, color: colors.foreground, fontWeight: '600' }}
+          <View style={{ gap: 16 }}>
+            {eligibleSchemes.map((scheme, idx) => {
+              const schemeGradients = [
+                ['#4CAF50', '#2E7D32'],  // Green
+                ['#2196F3', '#1565C0'],  // Blue
+                ['#9C27B0', '#6A1B9A'],  // Purple
+              ];
+              const gradient = schemeGradients[idx % schemeGradients.length];
+              return (
+                <GradientBanner
+                  key={scheme.id}
+                  gradient={gradient}
+                  title={scheme.nameHi}
+                  icon={scheme.iconKey as any}
                   onPress={() => router.push(`/schemes/${scheme.id}`)}
-                >
-                  {scheme.nameHi}
-                </Text>
-                <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
-              </Card>
-            ))}
+                />
+              );
+            })}
           </View>
         </View>
       )}
@@ -279,6 +282,7 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   grid: {
+    display: 'flex',
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
@@ -286,6 +290,7 @@ const styles = StyleSheet.create({
   },
   tileWrap: {
     width: '48%',
+    flexBasis: '48%',
   },
   schemeIcon: {
     width: 48,
