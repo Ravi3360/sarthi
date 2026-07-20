@@ -32,7 +32,7 @@ export default function ProfileScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 40, gap: 24 }}>
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 80, gap: 24 }}>
         <Pressable onPress={() => router.back()} hitSlop={16} style={styles.backBtn}>
           <Feather name="arrow-left" size={24} color={colors.foreground} />
         </Pressable>
@@ -91,13 +91,15 @@ export default function ProfileScreen() {
           </Card>
         </View>
 
-        <TextButton
-          label="लॉग आउट करें"
-          onPress={async () => {
-            await signOut();
-            router.replace('/');
-          }}
-        />
+        <View style={{ marginTop: 24, paddingBottom: 16 }}>
+          <TextButton
+            label="लॉग आउट करें"
+            onPress={async () => {
+              await signOut();
+              router.replace('/');
+            }}
+          />
+        </View>
       </ScrollView>
     </View>
   );
