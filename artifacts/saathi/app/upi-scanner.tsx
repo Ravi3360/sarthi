@@ -114,28 +114,28 @@ function UPIScannerScreen() {
 
             <ScrollView style={{ maxHeight: 300 }}>
               {upiData?.name && (
-                <View style={styles.detailRow}>
+                <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>
                   <Text style={{ color: colors.mutedForeground }}>Receiver Name</Text>
                   <Text style={{ color: colors.foreground, fontWeight: '700', fontSize: 16 }}>{upiData.name}</Text>
                 </View>
               )}
 
               {upiData?.upiId && (
-                <View style={styles.detailRow}>
+                <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>
                   <Text style={{ color: colors.mutedForeground }}>UPI ID</Text>
                   <Text style={{ color: colors.foreground, fontWeight: '700', fontSize: 16 }}>{upiData.upiId}</Text>
                 </View>
               )}
 
               {upiData?.amount && (
-                <View style={[styles.detailRow, { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, marginTop: 12 }]}>
+                <View style={[styles.detailRow, { borderTopWidth: 1, borderTopColor: colors.border, borderBottomColor: colors.border, paddingTop: 12, marginTop: 12 }]}>
                   <Text style={{ color: colors.mutedForeground }}>Amount</Text>
                   <Text style={{ color: colors.primary, fontWeight: '800', fontSize: 20 }}>₹{upiData.amount}</Text>
                 </View>
               )}
 
               {upiData?.description && (
-                <View style={styles.detailRow}>
+                <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>
                   <Text style={{ color: colors.mutedForeground }}>Note</Text>
                   <Text style={{ color: colors.foreground, fontSize: 14 }}>{upiData.description}</Text>
                 </View>
@@ -204,7 +204,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   detailRow: {
-    paddingVertical: 12,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     borderBottomWidth: 1,
   },
 });
