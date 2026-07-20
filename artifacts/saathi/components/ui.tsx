@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useColors } from '@/hooks/useColors';
 
 // ---------------------------------------------------------------------------
@@ -403,6 +404,51 @@ export function SkeletonLoader() {
   );
 }
 
+// Gradient banner card for schemes, earnings, quick actions
+export function GradientBanner({
+  gradient,
+  title,
+  subtitle,
+  icon,
+  onPress,
+}: {
+  gradient: [string, string];
+  title: string;
+  subtitle?: string;
+  icon?: keyof typeof Feather.glyphMap;
+  onPress?: () => void;
+}) {
+  return (
+    <Pressable onPress={onPress} hitSlop={12}>
+      <LinearGradient
+        colors={gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[
+          styles.gradientBanner,
+          {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            elevation: 5,
+          },
+        ]}
+      >
+        {icon && (
+          <View style={styles.bannerIconBg}>
+            <Feather name={icon} size={28} color="#FFFFFF" />
+          </View>
+        )}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.bannerTitle}>{title}</Text>
+          {subtitle && <Text style={styles.bannerSubtitle}>{subtitle}</Text>}
+        </View>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // IconTile — used in quick-action grids, occupation picker, document locker
 // ---------------------------------------------------------------------------
@@ -592,5 +638,33 @@ const styles = StyleSheet.create({
   skeletonCard: {
     height: 80,
     borderRadius: 16,
+  },
+  gradientBanner: {
+    padding: 20,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    minHeight: 140,
+  },
+  bannerIconBg: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bannerTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 24,
+  },
+  bannerSubtitle: {
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: 14,
+    fontWeight: '500',
+    marginTop: 4,
   },
 });

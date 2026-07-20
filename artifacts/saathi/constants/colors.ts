@@ -54,8 +54,55 @@ const colors = {
     input: '#E5E5E5',
   },
 
+  dark: {
+    // Legacy aliases
+    text: '#FFFFFF',
+    tint: '#FF6B35',
+
+    // Core surfaces — dark background
+    background: '#0F0F0F',
+    foreground: '#FFFFFF',
+
+    // Cards / elevated surfaces — slightly lighter than background
+    card: '#1A1A1A',
+    cardForeground: '#FFFFFF',
+
+    // Primary action — orange/red for better visibility on dark
+    primary: '#FF6B35',
+    primaryDark: '#E55100',
+    primaryTint: 'rgba(255, 107, 53, 0.15)',
+    primaryForeground: '#FFFFFF',
+
+    // Secondary surfaces
+    secondary: '#1A1A1A',
+    secondaryForeground: '#FFFFFF',
+
+    // Muted elements
+    muted: '#2A2A2A',
+    mutedForeground: '#999999',
+
+    // Accent highlights
+    accent: 'rgba(255, 107, 53, 0.2)',
+    accentForeground: '#FF6B35',
+
+    // Destructive / error
+    destructive: '#FF5252',
+    destructiveForeground: '#FFFFFF',
+    error: '#FF5252',
+
+    // Status colors — brighter for dark background
+    success: '#4CAF50',
+    successTint: 'rgba(76, 175, 80, 0.15)',
+    warning: '#FFC107',
+    warningTint: 'rgba(255, 193, 7, 0.15)',
+
+    // Borders
+    border: '#2A2A2A',
+    input: '#2A2A2A',
+  },
+
   // Border radius (in px)
-  radius: 12,
+  radius: 16,
 };
 
 export default colors;

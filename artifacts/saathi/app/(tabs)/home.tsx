@@ -13,18 +13,17 @@ import { listSchemes } from '@/services/schemes';
 import { listIncome } from '@/services/income';
 import { formatCurrency } from '@/utils/format';
 import { getOccupation } from '@/constants/occupations';
-import { Avatar, Card, IconTile, ProgressRing, LoadingState, SkeletonLoader } from '@/components/ui';
+import { Avatar, Card, IconTile, ProgressRing, LoadingState, SkeletonLoader, GradientBanner } from '@/components/ui';
 import type { JobListing } from '@/types/job';
 import type { GovtScheme } from '@/types/scheme';
 
-// Decorative-only gradient pairs for the govt-scheme banner carousel — cycled
-// by index, not tied to the design-token palette (which is deliberately
-// warm-red/high-contrast for form UI, not banner variety).
+// Gradient pairs for scheme cards — vibrant for dark theme
 const BANNER_GRADIENTS: [string, string][] = [
-  ['#E31E24', '#8E1216'],
-  ['#F9A825', '#B36B00'],
-  ['#2E7D32', '#134E1A'],
-  ['#6A3FA0', '#3E1F63'],
+  ['#FF6B35', '#D32F2F'],  // Red-orange gradient
+  ['#4CAF50', '#2E7D32'],  // Green gradient (for savings/schemes)
+  ['#2196F3', '#1565C0'],  // Blue gradient (for government schemes)
+  ['#9C27B0', '#6A1B9A'],  // Purple gradient
+  ['#FF9800', '#E65100'],  // Orange gradient
 ];
 
 const BANNER_CARD_WIDTH = 260;
@@ -209,10 +208,12 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <Card style={{ backgroundColor: colors.primaryTint, borderColor: colors.primaryTint }}>
-        <Text style={{ color: colors.primaryDark, fontWeight: '600', marginBottom: 4 }}>{t('home.monthEarnings')}</Text>
-        <Text style={{ color: colors.primaryDark, fontSize: 28, fontWeight: '800' }}>{formatCurrency(monthTotal)}</Text>
-      </Card>
+      <GradientBanner
+        gradient={['#FF6B35', '#D32F2F']}
+        title={t('home.monthEarnings')}
+        subtitle={`${t('home.thisMonth')}: ${formatCurrency(monthTotal)}`}
+        icon="trending-up"
+      />
 
       {eligibleSchemes.length > 0 && (
         <View>
