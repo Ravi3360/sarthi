@@ -220,7 +220,7 @@ export default function HomeScreen() {
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t('home.eligibleSchemes')}</Text>
           <View style={{ gap: 16 }}>
             {eligibleSchemes.map((scheme, idx) => {
-              const schemeGradients = [
+              const schemeGradients: [string, string][] = [
                 ['#4CAF50', '#2E7D32'],  // Green
                 ['#2196F3', '#1565C0'],  // Blue
                 ['#9C27B0', '#6A1B9A'],  // Purple
@@ -282,7 +282,6 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   grid: {
-    display: 'flex',
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
@@ -291,6 +290,7 @@ const styles = StyleSheet.create({
   tileWrap: {
     width: '48%',
     flexBasis: '48%',
+    maxWidth: '48%',
   },
   schemeIcon: {
     width: 48,
