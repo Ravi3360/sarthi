@@ -368,6 +368,31 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
   );
 }
 
+export function SkeletonLoader() {
+  const colors = useColors();
+  return (
+    <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 12, gap: 16 }}>
+      {/* Header skeleton */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={[styles.skeletonAvatar, { backgroundColor: colors.muted }]} />
+        <View style={{ flex: 1, gap: 6 }}>
+          <View style={[styles.skeletonLine, { width: '60%', backgroundColor: colors.muted }]} />
+          <View style={[styles.skeletonLine, { width: '40%', backgroundColor: colors.muted }]} />
+        </View>
+      </View>
+      {/* Banner skeleton */}
+      <View style={[styles.skeletonBanner, { backgroundColor: colors.muted }]} />
+      {/* Section skeleton */}
+      {[1, 2].map((i) => (
+        <View key={i} style={{ gap: 8 }}>
+          <View style={[styles.skeletonLine, { width: '50%', backgroundColor: colors.muted }]} />
+          <View style={[styles.skeletonCard, { backgroundColor: colors.muted }]} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // IconTile — used in quick-action grids, occupation picker, document locker
 // ---------------------------------------------------------------------------
@@ -538,5 +563,22 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
+  },
+  skeletonAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  skeletonLine: {
+    height: 16,
+    borderRadius: 8,
+  },
+  skeletonBanner: {
+    height: 160,
+    borderRadius: 24,
+  },
+  skeletonCard: {
+    height: 80,
+    borderRadius: 16,
   },
 });

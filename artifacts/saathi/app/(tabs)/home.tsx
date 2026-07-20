@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router, useFocusEffect } from 'expo-router';
@@ -13,7 +13,7 @@ import { listSchemes } from '@/services/schemes';
 import { listIncome } from '@/services/income';
 import { formatCurrency } from '@/utils/format';
 import { getOccupation } from '@/constants/occupations';
-import { Avatar, Card, IconTile, ProgressRing, LoadingState } from '@/components/ui';
+import { Avatar, Card, IconTile, ProgressRing, LoadingState, SkeletonLoader } from '@/components/ui';
 import type { JobListing } from '@/types/job';
 import type { GovtScheme } from '@/types/scheme';
 
@@ -36,14 +36,16 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { worker, isLoading } = useWorker();
+  const { worker, isLoading: workerLoading } = useWorker();
   const [jobs, setJobs] = useState<JobListing[]>([]);
   const [schemes, setSchemes] = useState<GovtScheme[]>([]);
   const [monthTotal, setMonthTotal] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const bannerScrollRef = useRef<ScrollView>(null);
   const bannerIndexRef = useRef(0);
   const bannerTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const dataLoadedRef = useRef(false);
 
   const startBannerAutoScroll = useCallback(() => {
     if (bannerTimerRef.current) clearInterval(bannerTimerRef.current);
@@ -64,21 +66,35 @@ export default function HomeScreen() {
 
   const load = useCallback(async () => {
     if (!worker) return;
-    const [jobList, incomeList, schemeList] = await Promise.all([
-      listJobs(),
-      listIncome(worker.uid),
-      listSchemes(),
-    ]);
-    setJobs(jobList.slice(0, 3));
-    setSchemes(schemeList);
-    const now = new Date();
-    const total = incomeList
-      .filter((e) => {
-        const d = new Date(e.date);
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      })
-      .reduce((sum, e) => sum + e.amount, 0);
-    setMonthTotal(total);
+    if (dataLoadedRef.current) return; // Skip if already loaded this session
+
+    try {
+      // Load critical data first (jobs + schemes)
+      const [jobList, schemeList] = await Promise.all([
+        listJobs(),
+        listSchemes(),
+      ]);
+      setJobs(jobList.slice(0, 3));
+      setSchemes(schemeList);
+
+      // Load income in background to not block UI
+      listIncome(worker.uid).then((incomeList) => {
+        const now = new Date();
+        const total = incomeList
+          .filter((e) => {
+            const d = new Date(e.date);
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+          })
+          .reduce((sum, e) => sum + e.amount, 0);
+        setMonthTotal(total);
+      });
+
+      dataLoadedRef.current = true;
+      setDataLoaded(true);
+    } catch (error) {
+      console.error('Failed to load home data:', error);
+      setDataLoaded(true);
+    }
   }, [worker]);
 
   useFocusEffect(
@@ -93,9 +109,13 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  if (isLoading || !worker) return <LoadingState label={t('common.loading') ?? undefined} />;
+  if (workerLoading || !worker) return <LoadingState label={t('common.loading') ?? undefined} />;
+  if (!dataLoaded && !jobs.length) return <SkeletonLoader />;
 
-  const eligibleSchemes = schemes.filter((s) => checkEligibility(s, worker).eligible).slice(0, 3);
+  const eligibleSchemes = useMemo(
+    () => schemes.filter((s) => checkEligibility(s, worker).eligible).slice(0, 3),
+    [schemes, worker]
+  );
 
   return (
     <ScrollView
