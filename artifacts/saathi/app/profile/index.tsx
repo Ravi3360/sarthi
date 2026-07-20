@@ -10,6 +10,7 @@ import { useWorker } from '@/context/WorkerContext';
 import { getOccupation } from '@/constants/occupations';
 import { formatDateHi } from '@/utils/format';
 import { Avatar, Badge, Card, LoadingState, TextButton } from '@/components/ui';
+import { UPICard } from '@/components/UPICard';
 
 const sections: { key: string; label: string; icon: keyof typeof Feather.glyphMap }[] = [
   { key: 'personal', label: 'व्यक्तिगत जानकारी', icon: 'user' },
@@ -99,6 +100,22 @@ export default function ProfileScreen() {
             <Feather name="chevron-right" size={24} color={colors.mutedForeground} />
           </Card>
         </View>
+
+        <UPICard
+          upiId={`${worker.mobile}@ybl`}
+          mobile={worker.mobile}
+          name={worker.name}
+        />
+
+        <Card onPress={() => router.push('/upi-scanner')} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 16 }}>
+          <View style={[styles.iconWrap, { backgroundColor: colors.successTint }]}>
+            <Feather name="scan" size={24} color={colors.success} />
+          </View>
+          <Text style={{ flex: 1, fontWeight: '600', color: colors.foreground, fontSize: 16 }}>
+            Scan UPI Payment
+          </Text>
+          <Feather name="chevron-right" size={24} color={colors.mutedForeground} />
+        </Card>
 
         <View style={{ marginTop: 24, paddingBottom: 16 }}>
           <TextButton
