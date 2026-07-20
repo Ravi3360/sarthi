@@ -40,7 +40,7 @@
     "resend": "दोबारा भेजें",
     "resendIn": "{{seconds}} सेकंड में दोबारा भेजें",
     "wrongOtp": "गलत OTP, फिर कोशिश करें",
-    "mockHint": "टेस्ट के लिए OTP: 123456"
+    "mockHint": "टेस्ट के लिए OTP: 1234"
   },
   "profile": {
     "completion": "प्रोफ़ाइल {{percent}}% पूरी",

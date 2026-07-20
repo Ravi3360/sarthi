@@ -284,13 +284,12 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
-    justifyContent: 'space-between',
+    gap: 14,
   },
   tileWrap: {
     width: '48%',
     flexBasis: '48%',
-    maxWidth: '48%',
+    minWidth: 150,
   },
   schemeIcon: {
     width: 48,
