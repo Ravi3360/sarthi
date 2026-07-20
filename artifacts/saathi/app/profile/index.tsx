@@ -109,10 +109,10 @@ export default function ProfileScreen() {
 
         <Card onPress={() => router.push('/upi-scanner')} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 16 }}>
           <View style={[styles.iconWrap, { backgroundColor: colors.successTint }]}>
-            <Feather name="scan" size={24} color={colors.success} />
+            <Feather name="dollar-sign" size={24} color={colors.success} />
           </View>
           <Text style={{ flex: 1, fontWeight: '600', color: colors.foreground, fontSize: 16 }}>
-            Scan UPI Payment
+            Receive Payment
           </Text>
           <Feather name="chevron-right" size={24} color={colors.mutedForeground} />
         </Card>

@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { BarCodeScanner } from 'expo-barcode-scanner';
-import { Pressable, StyleSheet, Text, View, Modal, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, Text, View, Modal, ScrollView, TextInput } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,23 +15,13 @@ interface UPIData {
   transactionRef?: string;
 }
 
-export default function UPIScannerScreen() {
+function UPIScannerScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const showToast = useToast();
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [scanned, setScanned] = useState(false);
+  const [upiCode, setUpiCode] = useState('');
   const [upiData, setUpiData] = useState<UPIData | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
-
-  useEffect(() => {
-    const getBarCodeScannerPermissions = async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
-      setHasPermission(status === 'granted');
-    };
-
-    getBarCodeScannerPermissions();
-  }, []);
 
   const parseUPIString = (data: string): UPIData | null => {
     try {
@@ -53,16 +42,18 @@ export default function UPIScannerScreen() {
     }
   };
 
-  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
-    setScanned(true);
-    const parsed = parseUPIString(data);
+  const handleScanUPI = () => {
+    if (!upiCode.trim()) {
+      showToast('Please enter UPI code');
+      return;
+    }
 
+    const parsed = parseUPIString(upiCode);
     if (parsed && parsed.upiId) {
       setUpiData(parsed);
       setShowConfirm(true);
     } else {
-      showToast('Invalid UPI QR code');
-      setTimeout(() => setScanned(false), 1000);
+      showToast('Invalid UPI code format');
     }
   };
 
@@ -71,28 +62,9 @@ export default function UPIScannerScreen() {
       showToast(`Payment initiated to ${upiData.name || upiData.upiId}`);
       setShowConfirm(false);
       setUpiData(null);
-      setScanned(false);
+      setUpiCode('');
     }
   };
-
-  if (hasPermission === null) {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-        <Text style={{ color: colors.foreground }}>Requesting camera permission...</Text>
-      </View>
-    );
-  }
-
-  if (hasPermission === false) {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-        <Text style={{ color: colors.foreground, marginBottom: 16, textAlign: 'center' }}>
-          Camera permission is required to scan UPI QR codes
-        </Text>
-        <SecondaryButton label="Go Back" onPress={() => router.back()} />
-      </View>
-    );
-  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -100,21 +72,35 @@ export default function UPIScannerScreen() {
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Feather name="arrow-left" size={28} color={colors.foreground} />
         </Pressable>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: colors.foreground, flex: 1 }}>UPI Scanner</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: colors.foreground, flex: 1 }}>Receive Payment</Text>
       </View>
 
-      <BarCodeScanner
-        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-        style={StyleSheet.absoluteFillObject}
-      />
+      <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground, marginBottom: 12 }}>
+            Paste UPI Code
+          </Text>
+          <TextInput
+            placeholder="Paste UPI code here or enter manually"
+            placeholderTextColor={colors.mutedForeground}
+            value={upiCode}
+            onChangeText={setUpiCode}
+            style={[styles.input, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+            multiline
+          />
+          <PrimaryButton label="Parse UPI Code" onPress={handleScanUPI} />
+        </View>
 
-      {/* Scanner overlay */}
-      <View style={styles.overlay}>
-        <View style={styles.focusArea} />
-        <Text style={{ color: '#FFFFFF', fontSize: 16, marginTop: 16, textAlign: 'center' }}>
-          Point camera at UPI QR code
-        </Text>
-      </View>
+        <View style={[styles.infoCard, { backgroundColor: colors.primaryTint, borderColor: colors.primary }]}>
+          <Feather name="info" size={24} color={colors.primaryDark} style={{ marginBottom: 8 }} />
+          <Text style={{ color: colors.primaryDark, fontSize: 14, fontWeight: '600', marginBottom: 8 }}>
+            UPI Code Format
+          </Text>
+          <Text style={{ color: colors.primaryDark, fontSize: 12, opacity: 0.8, lineHeight: 18 }}>
+            upi://pay?pa=UPI_ID&pn=NAME&am=AMOUNT&tn=NOTE
+          </Text>
+        </View>
+      </ScrollView>
 
       {/* Confirmation Modal */}
       <Modal visible={showConfirm} transparent animationType="fade">
@@ -167,26 +153,31 @@ export default function UPIScannerScreen() {
   );
 }
 
+export default UPIScannerScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
+  card: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    gap: 12,
   },
-  focusArea: {
-    width: 280,
-    height: 280,
-    borderWidth: 3,
-    borderColor: '#00D4FF',
-    borderRadius: 20,
-    shadowColor: '#00D4FF',
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 10,
+  infoCard: {
+    borderRadius: 16,
+    borderWidth: 2,
+    padding: 16,
+    alignItems: 'flex-start',
+  },
+  input: {
+    borderWidth: 1.5,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    minHeight: 100,
+    marginBottom: 12,
   },
   modalOverlay: {
     flex: 1,
