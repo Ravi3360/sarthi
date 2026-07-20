@@ -106,6 +106,11 @@ export function BankSuggestField({
   const [focused, setFocused] = useState(false);
   const suggestions = searchBankSuggestions(bankName);
 
+  const handleSelectBank = (selectedBankName: string, ifsc: string) => {
+    onIfscSelect(selectedBankName, ifsc);
+    setFocused(false);
+  };
+
   return (
     <View style={styles.fieldWrap}>
       <Text style={[styles.label, { color: colors.foreground }]}>बैंक का नाम</Text>
@@ -127,22 +132,23 @@ export function BankSuggestField({
           style={[styles.input, { color: colors.foreground }]}
         />
       </View>
-      {suggestions.length > 0 && (
+      {suggestions.length > 0 && focused && (
         <View style={[styles.suggestBox, { borderColor: colors.border, backgroundColor: colors.card }]}>
-          <Text style={{ fontSize: 12, color: colors.mutedForeground, paddingHorizontal: 12, paddingTop: 8, paddingBottom: 4 }}>
+          <Text style={{ fontSize: 14, color: colors.mutedForeground, paddingHorizontal: 12, paddingTop: 8, paddingBottom: 6 }}>
             📋 IFSC चुनें या नीचे खुद भरें
           </Text>
           {suggestions.map((s) => (
             <Pressable
               key={s.ifsc}
-              onPress={() => onIfscSelect(s.bankName, s.ifsc)}
+              onPress={() => handleSelectBank(s.bankName, s.ifsc)}
+              hitSlop={8}
               style={[styles.suggestRow, { borderTopColor: colors.border }]}
             >
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}>{s.ifsc}</Text>
-                <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>{s.branch}</Text>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>{s.ifsc}</Text>
+                <Text style={{ fontSize: 14, color: colors.mutedForeground, marginTop: 4 }}>{s.branch}</Text>
               </View>
-              <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+              <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
             </Pressable>
           ))}
         </View>
@@ -256,10 +262,10 @@ export function SelectField({
         onPress={() => setOpen(true)}
         style={[styles.inputRow, { borderColor: colors.border, backgroundColor: colors.background }]}
       >
-        <Text style={{ flex: 1, fontSize: 16, color: selectedLabel ? colors.foreground : colors.mutedForeground }}>
+        <Text style={{ flex: 1, fontSize: 18, color: selectedLabel ? colors.foreground : colors.mutedForeground }}>
           {selectedLabel ?? placeholder}
         </Text>
-        <Feather name="chevron-down" size={20} color={colors.mutedForeground} />
+        <Feather name="chevron-down" size={22} color={colors.mutedForeground} />
       </Pressable>
       <BottomSheet visible={open} onClose={() => setOpen(false)}>
         <Text style={[styles.sheetTitle, { color: colors.foreground }]}>{label}</Text>
@@ -273,8 +279,8 @@ export function SelectField({
               }}
               style={[styles.sheetOption, { borderColor: colors.border }]}
             >
-              <Text style={{ fontSize: 16, color: colors.foreground, flex: 1 }}>{opt.label}</Text>
-              {opt.key === value && <Feather name="check" size={20} color={colors.primary} />}
+              <Text style={{ fontSize: 18, color: colors.foreground, flex: 1 }}>{opt.label}</Text>
+              {opt.key === value && <Feather name="check" size={22} color={colors.primary} />}
             </Pressable>
           ))}
         </ScrollView>
@@ -363,8 +369,8 @@ export function ComboSelectField({
               }}
               style={[styles.sheetOption, { borderColor: colors.border }]}
             >
-              <Text style={{ fontSize: 16, color: colors.foreground, flex: 1 }}>{opt.label}</Text>
-              {opt.key === value && <Feather name="check" size={20} color={colors.primary} />}
+              <Text style={{ fontSize: 18, color: colors.foreground, flex: 1 }}>{opt.label}</Text>
+              {opt.key === value && <Feather name="check" size={22} color={colors.primary} />}
             </Pressable>
           ))}
         </ScrollView>
@@ -546,30 +552,30 @@ export async function pickDocumentFile(): Promise<{
 
 const styles = StyleSheet.create({
   fieldWrap: {
-    gap: 6,
+    gap: 8,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
     borderWidth: 1.5,
     borderRadius: 12,
-    paddingHorizontal: 14,
-    minHeight: 52,
+    paddingHorizontal: 16,
+    minHeight: 56,
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    minHeight: Platform.select({ ios: 24, default: 44 }),
+    fontSize: 18,
+    minHeight: Platform.select({ ios: 28, default: 48 }),
     paddingVertical: 0,
     includeFontPadding: false,
   },
   helperText: {
-    fontSize: 13,
+    fontSize: 15,
   },
   stepperRow: {
     flexDirection: 'row',
@@ -577,35 +583,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderWidth: 1.5,
     borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    minHeight: 52,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    minHeight: 56,
   },
   stepperBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepperValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
   },
   sheetTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sheetOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   photoBox: {
-    width: 120,
-    height: 120,
+    width: 140,
+    height: 140,
     borderRadius: 16,
     borderWidth: 1.5,
     borderStyle: 'dashed',
@@ -614,20 +621,20 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   photoBoxCircular: {
-    borderRadius: 60,
+    borderRadius: 70,
   },
   suggestBox: {
     borderWidth: 1,
     borderRadius: 12,
-    marginTop: 6,
+    marginTop: 8,
     overflow: 'hidden',
   },
   suggestRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
-    gap: 8,
+    gap: 12,
   },
 });
