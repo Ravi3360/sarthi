@@ -194,16 +194,36 @@ export default function HomeScreen() {
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t('home.quickActions')}</Text>
         <View style={styles.grid}>
           <View style={styles.tileWrap}>
-            <IconTile icon="upload-cloud" label={t('home.uploadDocs')} onPress={() => router.push('/documents')} />
+            <IconTile
+              icon="upload-cloud"
+              label={t('home.uploadDocs')}
+              onPress={() => router.push('/documents')}
+              gradient={['#2196F3', '#1565C0']}
+            />
           </View>
           <View style={styles.tileWrap}>
-            <IconTile icon="trending-up" label={t('home.addIncome')} onPress={() => router.push('/(tabs)/income')} />
+            <IconTile
+              icon="trending-up"
+              label={t('home.addIncome')}
+              onPress={() => router.push('/(tabs)/income')}
+              gradient={['#4CAF50', '#2E7D32']}
+            />
           </View>
           <View style={styles.tileWrap}>
-            <IconTile icon="gift" label={t('home.viewSchemes')} onPress={() => router.push('/(tabs)/schemes')} />
+            <IconTile
+              icon="gift"
+              label={t('home.viewSchemes')}
+              onPress={() => router.push('/(tabs)/schemes')}
+              gradient={['#9C27B0', '#6A1B9A']}
+            />
           </View>
           <View style={styles.tileWrap}>
-            <IconTile icon="search" label={t('home.findJobs')} onPress={() => router.push('/jobs')} />
+            <IconTile
+              icon="search"
+              label={t('home.findJobs')}
+              onPress={() => router.push('/jobs')}
+              gradient={['#FF9800', '#E65100']}
+            />
           </View>
         </View>
       </View>

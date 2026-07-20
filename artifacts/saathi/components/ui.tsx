@@ -467,33 +467,19 @@ export function IconTile({
   onPress,
   selected,
   statusDot,
+  gradient,
 }: {
   icon: keyof typeof Feather.glyphMap;
   label: string;
   onPress?: () => void;
   selected?: boolean;
   statusDot?: 'success' | 'warning' | 'none';
+  gradient?: [string, string];
 }) {
   const colors = useColors();
-  return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={16}
-      style={({ pressed }) => [
-        styles.tile,
-        {
-          backgroundColor: selected ? colors.primaryTint : colors.card,
-          borderColor: selected ? colors.primary : colors.border,
-          opacity: pressed ? 0.85 : 1,
-          transform: [{ scale: pressed ? 0.97 : 1 }],
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.08,
-          shadowRadius: 4,
-          elevation: 2,
-        },
-      ]}
-    >
+
+  const TileContent = () => (
+    <>
       {statusDot && statusDot !== 'none' && (
         <View
           style={[
@@ -502,14 +488,27 @@ export function IconTile({
           ]}
         />
       )}
-      <View
-        style={[
-          styles.tileIconBg,
-          { backgroundColor: selected ? colors.primary : colors.primaryTint },
-        ]}
-      >
-        <Feather name={icon} size={20} color={selected ? '#FFFFFF' : colors.primary} />
-      </View>
+      {gradient ? (
+        <View style={{ width: 56, height: 56, borderRadius: 28, overflow: 'hidden' }}>
+          <LinearGradient
+            colors={gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ width: 56, height: 56, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Feather name={icon} size={28} color="#FFFFFF" />
+          </LinearGradient>
+        </View>
+      ) : (
+        <View
+          style={[
+            styles.tileIconBg,
+            { backgroundColor: selected ? colors.primary : colors.primaryTint },
+          ]}
+        >
+          <Feather name={icon} size={20} color={selected ? '#FFFFFF' : colors.primary} />
+        </View>
+      )}
       <Text
         numberOfLines={2}
         style={{
@@ -517,13 +516,98 @@ export function IconTile({
           fontWeight: '700',
           color: selected ? colors.primaryDark : colors.foreground,
           textAlign: 'center',
-          marginTop: 6,
+          marginTop: 8,
         }}
       >
         {label}
       </Text>
+    </>
+  );
+
+  const pressableContent = (
+    <Pressable
+      onPress={onPress}
+      hitSlop={16}
+      style={({ pressed }) => [
+        styles.tile,
+        {
+          backgroundColor: gradient ? 'transparent' : (selected ? colors.primaryTint : colors.card),
+          borderColor: gradient ? 'transparent' : (selected ? colors.primary : colors.border),
+          opacity: pressed ? 0.85 : 1,
+          transform: [{ scale: pressed ? 0.97 : 1 }],
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: gradient ? 0.2 : 0.08,
+          shadowRadius: gradient ? 8 : 4,
+          elevation: gradient ? 6 : 2,
+        },
+      ]}
+    >
+      <TileContent />
     </Pressable>
   );
+
+  if (gradient) {
+    return (
+      <LinearGradient
+        colors={gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[
+          styles.tile,
+          {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 6,
+            borderWidth: 0,
+          },
+        ]}
+      >
+        <Pressable
+          onPress={onPress}
+          hitSlop={16}
+          style={({ pressed }) => [
+            {
+              flex: 1,
+              width: '100%',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              opacity: pressed ? 0.85 : 1,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+            },
+          ]}
+        >
+          {statusDot && statusDot !== 'none' && (
+            <View
+              style={[
+                styles.tileDot,
+                { backgroundColor: statusDot === 'success' ? colors.success : colors.warning },
+              ]}
+            />
+          )}
+          <View style={[styles.tileIconBg, { backgroundColor: 'rgba(255,255,255,0.25)' }]}>
+            <Feather name={icon} size={24} color="#FFFFFF" />
+          </View>
+          <Text
+            numberOfLines={2}
+            style={{
+              fontSize: 16,
+              fontWeight: '700',
+              color: '#FFFFFF',
+              textAlign: 'center',
+            }}
+          >
+            {label}
+          </Text>
+        </Pressable>
+      </LinearGradient>
+    );
+  }
+
+  return pressableContent;
 }
 
 const styles = StyleSheet.create({
