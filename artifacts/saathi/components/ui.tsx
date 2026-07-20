@@ -508,7 +508,7 @@ export function IconTile({
           { backgroundColor: selected ? colors.primary : colors.primaryTint },
         ]}
       >
-        <Feather name={icon} size={28} color={selected ? '#FFFFFF' : colors.primary} />
+        <Feather name={icon} size={24} color={selected ? '#FFFFFF' : colors.primary} />
       </View>
       <Text
         numberOfLines={2}
@@ -616,9 +616,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   tileIconBg: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
