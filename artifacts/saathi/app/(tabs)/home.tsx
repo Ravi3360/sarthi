@@ -65,18 +65,20 @@ export default function HomeScreen() {
 
   const load = useCallback(async () => {
     if (!worker) return;
-    if (dataLoadedRef.current) return; // Skip if already loaded this session
 
     try {
-      // Load critical data first (jobs + schemes)
-      const [jobList, schemeList] = await Promise.all([
-        listJobs(),
-        listSchemes(),
-      ]);
-      setJobs(jobList.slice(0, 3));
-      setSchemes(schemeList);
+      // Load critical data first (jobs + schemes) - only once per session
+      if (!dataLoadedRef.current) {
+        const [jobList, schemeList] = await Promise.all([
+          listJobs(),
+          listSchemes(),
+        ]);
+        setJobs(jobList.slice(0, 3));
+        setSchemes(schemeList);
+        dataLoadedRef.current = true;
+      }
 
-      // Load income in background to not block UI
+      // Always reload income to show latest data
       listIncome(worker.uid).then((incomeList) => {
         const now = new Date();
         const total = incomeList
@@ -88,7 +90,6 @@ export default function HomeScreen() {
         setMonthTotal(total);
       });
 
-      dataLoadedRef.current = true;
       setDataLoaded(true);
     } catch (error) {
       console.error('Failed to load home data:', error);

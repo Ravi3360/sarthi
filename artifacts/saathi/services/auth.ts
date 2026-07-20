@@ -11,8 +11,7 @@ interface LinkWorkerAuthResponse {
 }
 
 export async function sendOtp(mobile: string): Promise<{ success: true }> {
-  // Fast response for better UX
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  // Instant response - no artificial delay for mock OTP
   return { success: true };
 }
 
@@ -20,8 +19,7 @@ export async function verifyOtp(
   mobile: string,
   otp: string,
 ): Promise<{ success: boolean; uid: string | null }> {
-  // Fast OTP validation
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  // Instant validation - no artificial delay for mock OTP
   if (otp !== MOCK_OTP) {
     return { success: false, uid: null };
   }

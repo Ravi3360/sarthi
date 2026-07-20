@@ -1,7 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import QRCode from 'qrcode.react';
 import { useColors } from '@/hooks/useColors';
 import { useToast } from '@/context/ToastContext';
 
@@ -9,66 +8,60 @@ export function UPICard({ upiId, mobile, name }: { upiId: string; mobile: string
   const colors = useColors();
   const showToast = useToast();
 
-  const qrData = useMemo(() => {
-    // UPI format: upi://pay?pa=UPI_ID&pn=NAME&tn=NOTE
-    const encodedName = encodeURIComponent(name || mobile);
-    return `upi://pay?pa=${upiId}&pn=${encodedName}`;
-  }, [upiId, name, mobile]);
-
   const handleCopyUPI = async () => {
     try {
       await Share.share({
-        message: `My UPI ID: ${upiId}`,
+        message: `My UPI ID: ${upiId}\nName: ${name || 'User'}`,
         title: 'Share UPI ID',
       });
-      showToast('UPI ID copied!');
+      showToast('UPI ID shared!');
     } catch {
-      showToast('Failed to copy');
+      showToast('Failed to share');
     }
   };
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>UPI Payment</Text>
+    <View style={[styles.card, { backgroundColor: colors.primaryTint, borderColor: colors.primary }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <Feather name="credit-card" size={28} color={colors.primaryDark} />
+        <Text style={[styles.sectionTitle, { color: colors.primaryDark, flex: 1 }]}>Your UPI</Text>
+      </View>
 
       <View style={styles.upiContainer}>
-        {/* QR Code Section */}
-        <View style={styles.qrSection}>
-          <View style={[styles.qrBox, { backgroundColor: colors.background, borderColor: colors.border }]}>
-            <QRCode
-              value={qrData}
-              size={180}
-              level="H"
-              includeMargin={true}
-              color={colors.foreground}
-              backgroundColor={colors.background}
-            />
-          </View>
-          <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 8, textAlign: 'center' }}>
-            Scan to receive payment
+        {/* UPI ID Display */}
+        <View style={[styles.upiBox, { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
+          <Text style={{ color: colors.primaryDark, fontSize: 12, opacity: 0.7 }}>UPI ID</Text>
+          <Text style={{ color: colors.primaryDark, fontWeight: '700', fontSize: 20, marginTop: 4 }}>
+            {upiId}
           </Text>
         </View>
 
-        {/* UPI Details Section */}
-        <View style={styles.detailsSection}>
-          <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>
-            <Text style={{ color: colors.mutedForeground, fontSize: 14 }}>UPI ID</Text>
-            <Text style={{ color: colors.foreground, fontWeight: '700', fontSize: 16 }}>{upiId}</Text>
+        {/* Details Row */}
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={[styles.detailBox, { backgroundColor: 'rgba(255,255,255,0.1)', flex: 1 }]}>
+            <Text style={{ color: colors.primaryDark, fontSize: 12, opacity: 0.7 }}>Name</Text>
+            <Text style={{ color: colors.primaryDark, fontWeight: '600', fontSize: 14, marginTop: 4 }}>
+              {name || 'User'}
+            </Text>
           </View>
-
-          <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>
-            <Text style={{ color: colors.mutedForeground, fontSize: 14 }}>Mobile</Text>
-            <Text style={{ color: colors.foreground, fontWeight: '700', fontSize: 16 }}>+91 {mobile}</Text>
+          <View style={[styles.detailBox, { backgroundColor: 'rgba(255,255,255,0.1)', flex: 1 }]}>
+            <Text style={{ color: colors.primaryDark, fontSize: 12, opacity: 0.7 }}>Mobile</Text>
+            <Text style={{ color: colors.primaryDark, fontWeight: '600', fontSize: 14, marginTop: 4 }}>
+              +91 {mobile}
+            </Text>
           </View>
-
-          <Pressable
-            onPress={handleCopyUPI}
-            style={[styles.copyBtn, { backgroundColor: colors.primaryTint }]}
-          >
-            <Feather name="copy" size={18} color={colors.primaryDark} />
-            <Text style={{ color: colors.primaryDark, fontWeight: '600', fontSize: 14 }}>Share UPI ID</Text>
-          </Pressable>
         </View>
+
+        {/* Share Button */}
+        <Pressable
+          onPress={handleCopyUPI}
+          style={[styles.shareBtn, { backgroundColor: colors.primaryDark }]}
+        >
+          <Feather name="share-2" size={20} color="#FFFFFF" />
+          <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 16, flex: 1, textAlign: 'center' }}>
+            Share UPI ID
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -77,44 +70,32 @@ export function UPICard({ upiId, mobile, name }: { upiId: string; mobile: string
 const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
-    borderWidth: 1,
+    borderWidth: 2,
     padding: 20,
-    gap: 16,
+    gap: 12,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
   },
   upiContainer: {
-    gap: 20,
+    gap: 16,
   },
-  qrSection: {
-    alignItems: 'center',
+  upiBox: {
+    borderRadius: 12,
+    padding: 16,
   },
-  qrBox: {
+  detailBox: {
+    borderRadius: 12,
     padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
+  },
+  shareBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  detailsSection: {
     gap: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  copyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 12,
-    marginTop: 8,
+    marginTop: 4,
   },
 });
