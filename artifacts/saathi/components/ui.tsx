@@ -38,11 +38,13 @@ export function PrimaryButton({
       testID={testID}
       onPress={onPress}
       disabled={isDisabled}
+      hitSlop={12}
       style={({ pressed }) => [
         styles.button,
         {
           backgroundColor: isDisabled ? colors.mutedForeground : colors.primary,
-          opacity: pressed ? 0.85 : 1,
+          opacity: pressed ? 0.9 : 1,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
         },
       ]}
     >
@@ -68,13 +70,15 @@ export function SecondaryButton({ label, onPress, loading, disabled, icon, testI
       testID={testID}
       onPress={onPress}
       disabled={isDisabled}
+      hitSlop={12}
       style={({ pressed }) => [
         styles.button,
         {
           backgroundColor: 'transparent',
           borderWidth: 1.5,
           borderColor: isDisabled ? colors.border : colors.primary,
-          opacity: pressed ? 0.7 : 1,
+          opacity: pressed ? 0.8 : 1,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
         },
       ]}
     >
@@ -128,12 +132,18 @@ export function Card({
 }) {
   const colors = useColors();
   return (
-    <View
-      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }, style]}
-      onTouchEnd={onTouchEnd}
+    <Pressable
+      onPress={onTouchEnd}
+      hitSlop={8}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: colors.card, borderColor: colors.border },
+        pressed && { opacity: 0.8, transform: [{ scale: 0.99 }] },
+        style,
+      ]}
     >
       {children}
-    </View>
+    </Pressable>
   );
 }
 
@@ -414,12 +424,14 @@ export function IconTile({
   return (
     <Pressable
       onPress={onPress}
+      hitSlop={16}
       style={({ pressed }) => [
         styles.tile,
         {
           backgroundColor: selected ? colors.primaryTint : colors.card,
           borderColor: selected ? colors.primary : colors.border,
-          opacity: pressed ? 0.8 : 1,
+          opacity: pressed ? 0.85 : 1,
+          transform: [{ scale: pressed ? 0.97 : 1 }],
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.08,

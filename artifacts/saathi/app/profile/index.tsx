@@ -32,65 +32,62 @@ export default function ProfileScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 8, paddingHorizontal: 20, paddingBottom: 40, gap: 20 }}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <Feather name="arrow-left" size={22} color={colors.foreground} />
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 16, paddingHorizontal: 20, paddingBottom: 40, gap: 24 }}>
+        <Pressable onPress={() => router.back()} hitSlop={16} style={styles.backBtn}>
+          <Feather name="arrow-left" size={24} color={colors.foreground} />
         </Pressable>
 
         <Card style={styles.card}>
           <Avatar uri={worker.photoUrl} name={worker.name || '?'} size={120} />
           <Text style={[styles.name, { color: colors.foreground }]}>{worker.name || 'नाम दर्ज नहीं'}</Text>
-          <Text style={{ color: colors.mutedForeground }}>सदस्य: {formatDateHi(worker.createdAt)} से</Text>
+          <Text style={{ color: colors.mutedForeground, fontSize: 14 }}>सदस्य: {formatDateHi(worker.createdAt)} से</Text>
           {worker.occupation ? (
-            <Text style={{ color: colors.mutedForeground, marginTop: 2 }}>{getOccupation(worker.occupation)?.labelHi}</Text>
+            <Text style={{ color: colors.mutedForeground, marginTop: 4, fontSize: 14 }}>{getOccupation(worker.occupation)?.labelHi}</Text>
           ) : null}
           {(worker.aadhaarVerified || worker.policeVerified) && (
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
               {worker.aadhaarVerified && <Badge label={t('profile.aadhaarVerified')} tone="success" />}
               {worker.policeVerified && <Badge label={t('profile.policeVerified')} tone="success" />}
             </View>
           )}
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <View style={styles.cardRow}>
-            <Text style={{ color: colors.mutedForeground }}>मोबाइल</Text>
-            <Text style={{ color: colors.foreground, fontWeight: '700' }}>+91 {worker.mobile}</Text>
+            <Text style={{ color: colors.mutedForeground, fontSize: 14 }}>मोबाइल</Text>
+            <Text style={{ color: colors.foreground, fontWeight: '700', fontSize: 16 }}>+91 {worker.mobile}</Text>
           </View>
         </Card>
 
-        <View style={{ flexDirection: 'row', gap: 10 }}>
+        <View style={{ flexDirection: 'row', gap: 16 }}>
           <View style={[styles.statPill, { backgroundColor: colors.primaryTint }]}>
             <Text style={[styles.statValue, { color: colors.primaryDark }]}>{worker.completionPercent}%</Text>
-            <Text style={{ color: colors.primaryDark }}>प्रोफ़ाइल पूर्णता</Text>
+            <Text style={{ color: colors.primaryDark, fontSize: 14 }}>प्रोफ़ाइल पूर्णता</Text>
           </View>
           <View style={[styles.statPill, { backgroundColor: colors.successTint }]}>
             <Text style={[styles.statValue, { color: colors.success }]}>★ {worker.rating.toFixed(1)}</Text>
-            <Text style={{ color: colors.success }}>{t('profile.rating')}</Text>
+            <Text style={{ color: colors.success, fontSize: 14 }}>{t('profile.rating')}</Text>
           </View>
         </View>
 
-        <View style={{ gap: 10 }}>
+        <View style={{ gap: 16 }}>
           {sections.map((section) => (
-            <Card key={section.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Card key={section.key} onTouchEnd={() => router.push(`/profile/edit/${section.key}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 20 }}>
               <View style={[styles.iconWrap, { backgroundColor: colors.primaryTint }]}>
-                <Feather name={section.icon} size={20} color={colors.primaryDark} />
+                <Feather name={section.icon} size={24} color={colors.primaryDark} />
               </View>
-              <Text
-                style={{ flex: 1, fontWeight: '600', color: colors.foreground }}
-                onPress={() => router.push(`/profile/edit/${section.key}`)}
-              >
+              <Text style={{ flex: 1, fontWeight: '600', color: colors.foreground, fontSize: 16 }}>
                 {section.label}
               </Text>
-              <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+              <Feather name="chevron-right" size={24} color={colors.mutedForeground} />
             </Card>
           ))}
-          <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <Card onTouchEnd={() => router.push('/skills')} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 20 }}>
             <View style={[styles.iconWrap, { backgroundColor: colors.primaryTint }]}>
-              <Feather name="award" size={20} color={colors.primaryDark} />
+              <Feather name="award" size={24} color={colors.primaryDark} />
             </View>
-            <Text style={{ flex: 1, fontWeight: '600', color: colors.foreground }} onPress={() => router.push('/skills')}>
+            <Text style={{ flex: 1, fontWeight: '600', color: colors.foreground, fontSize: 16 }}>
               {t('skills.title')}
             </Text>
-            <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+            <Feather name="chevron-right" size={24} color={colors.mutedForeground} />
           </Card>
         </View>
 
@@ -108,25 +105,25 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   backBtn: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: -8,
+    marginLeft: -12,
   },
   card: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 28,
   },
   name: {
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: '700',
-    marginTop: 12,
+    marginTop: 16,
   },
   divider: {
-    height: StyleSheet.hairlineWidth,
+    height: 1,
     alignSelf: 'stretch',
-    marginVertical: 16,
+    marginVertical: 20,
   },
   cardRow: {
     flexDirection: 'row',
@@ -136,17 +133,17 @@ const styles = StyleSheet.create({
   statPill: {
     flex: 1,
     borderRadius: 16,
-    padding: 14,
+    padding: 16,
     gap: 2,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '800',
   },
   iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
