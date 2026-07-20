@@ -123,7 +123,11 @@ export default function HomeScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
     >
       <View style={styles.headerRow}>
-        <Pressable onPress={() => router.push('/profile')} hitSlop={8}>
+        <Pressable
+          onPress={() => router.push('/profile')}
+          hitSlop={16}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1, transform: [{ scale: pressed ? 0.95 : 1 }] }]}
+        >
           <Avatar uri={worker.photoUrl} name={worker.name || '?'} size={52} />
         </Pressable>
         <View style={{ flex: 1 }}>

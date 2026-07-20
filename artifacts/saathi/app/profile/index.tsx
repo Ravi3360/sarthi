@@ -18,9 +18,26 @@ const sections: { key: string; label: string; icon: keyof typeof Feather.glyphMa
   { key: 'health', label: 'स्वास्थ्य व योजनाएँ', icon: 'heart' },
 ];
 
-// Minimalist "personal business card" style profile screen — display only
-// for now (see profile.edit sections for the data-entry side). Editable
-// inline editing on this card itself is a follow-up phase.
+const SectionCard = React.memo(function SectionCard({
+  section,
+  colors,
+}: {
+  section: { key: string; label: string; icon: keyof typeof Feather.glyphMap };
+  colors: ReturnType<typeof useColors>;
+}) {
+  return (
+    <Card onPress={() => router.push(`/profile/edit/${section.key}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 20 }}>
+      <View style={[styles.iconWrap, { backgroundColor: colors.primaryTint }]}>
+        <Feather name={section.icon} size={24} color={colors.primaryDark} />
+      </View>
+      <Text style={{ flex: 1, fontWeight: '600', color: colors.foreground, fontSize: 16 }}>
+        {section.label}
+      </Text>
+      <Feather name="chevron-right" size={24} color={colors.mutedForeground} />
+    </Card>
+  );
+});
+
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const colors = useColors();
@@ -70,17 +87,9 @@ export default function ProfileScreen() {
 
         <View style={{ gap: 16 }}>
           {sections.map((section) => (
-            <Card key={section.key} onTouchEnd={() => router.push(`/profile/edit/${section.key}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 20 }}>
-              <View style={[styles.iconWrap, { backgroundColor: colors.primaryTint }]}>
-                <Feather name={section.icon} size={24} color={colors.primaryDark} />
-              </View>
-              <Text style={{ flex: 1, fontWeight: '600', color: colors.foreground, fontSize: 16 }}>
-                {section.label}
-              </Text>
-              <Feather name="chevron-right" size={24} color={colors.mutedForeground} />
-            </Card>
+            <SectionCard key={section.key} section={section} colors={colors} />
           ))}
-          <Card onTouchEnd={() => router.push('/skills')} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 20 }}>
+          <Card onPress={() => router.push('/skills')} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 20 }}>
             <View style={[styles.iconWrap, { backgroundColor: colors.primaryTint }]}>
               <Feather name="award" size={24} color={colors.primaryDark} />
             </View>

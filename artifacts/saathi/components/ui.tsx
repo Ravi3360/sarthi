@@ -126,16 +126,19 @@ export function Card({
   children,
   style,
   onTouchEnd,
+  onPress,
 }: {
   children: React.ReactNode;
   style?: object;
   onTouchEnd?: () => void;
+  onPress?: () => void;
 }) {
   const colors = useColors();
+  const handlePress = onPress || onTouchEnd;
   return (
     <Pressable
-      onPress={onTouchEnd}
-      hitSlop={8}
+      onPress={handlePress}
+      hitSlop={12}
       style={({ pressed }) => [
         styles.card,
         { backgroundColor: colors.card, borderColor: colors.border },
