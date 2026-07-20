@@ -11,8 +11,8 @@ interface LinkWorkerAuthResponse {
 }
 
 export async function sendOtp(mobile: string): Promise<{ success: true }> {
-  // Simulated network delay so the UI feels real. No real SMS is sent.
-  await new Promise((resolve) => setTimeout(resolve, 600));
+  // Fast response for better UX
+  await new Promise((resolve) => setTimeout(resolve, 100));
   return { success: true };
 }
 
@@ -20,7 +20,8 @@ export async function verifyOtp(
   mobile: string,
   otp: string,
 ): Promise<{ success: boolean; uid: string | null }> {
-  await new Promise((resolve) => setTimeout(resolve, 600));
+  // Fast OTP validation
+  await new Promise((resolve) => setTimeout(resolve, 100));
   if (otp !== MOCK_OTP) {
     return { success: false, uid: null };
   }
