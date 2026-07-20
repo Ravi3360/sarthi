@@ -79,16 +79,15 @@ export default function HomeScreen() {
       }
 
       // Always reload income to show latest data
-      listIncome(worker.uid).then((incomeList) => {
-        const now = new Date();
-        const total = incomeList
-          .filter((e) => {
-            const d = new Date(e.date);
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-          })
-          .reduce((sum, e) => sum + e.amount, 0);
-        setMonthTotal(total);
-      });
+      const incomeList = await listIncome(worker.uid);
+      const now = new Date();
+      const total = incomeList
+        .filter((e) => {
+          const d = new Date(e.date);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        })
+        .reduce((sum, e) => sum + e.amount, 0);
+      setMonthTotal(total);
 
       setDataLoaded(true);
     } catch (error) {
