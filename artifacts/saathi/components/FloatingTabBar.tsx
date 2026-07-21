@@ -29,6 +29,12 @@ export function FloatingTabBar() {
   const isIOS = Platform.OS === 'ios';
   const [activeTab, setActiveTab] = useState('home');
 
+  const handleTabPress = (tabKey: string, tabPath: string) => {
+    console.log('Tab pressed:', tabKey);
+    setActiveTab(tabKey);
+    router.push(tabPath);
+  };
+
   return (
     <View style={[styles.wrap, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 6) }]}>
       {isIOS ? (
@@ -39,13 +45,11 @@ export function FloatingTabBar() {
       <View style={styles.row}>
         {TABS.map((tab) => {
           const isFocused = activeTab === tab.key;
+          console.log(`Tab ${tab.key}: isFocused=${isFocused}, activeTab=${activeTab}`);
           return (
             <Pressable
               key={tab.key}
-              onPress={() => {
-                setActiveTab(tab.key);
-                router.push(tab.path);
-              }}
+              onPress={() => handleTabPress(tab.key, tab.path)}
               style={[styles.item, isFocused && { backgroundColor: colors.primaryTint }]}
               hitSlop={12}
             >

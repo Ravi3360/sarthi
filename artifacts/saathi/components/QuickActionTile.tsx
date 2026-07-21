@@ -14,7 +14,7 @@ interface QuickActionTileProps {
 
 const iconMap = {
   upload: (
-    <Svg width={24} height={24} viewBox="0 0 32 32" fill="none">
+    <Svg width={20} height={20} viewBox="0 0 32 32" fill="none">
       <Path
         d="M16 4V14M16 4L12 8M16 4L20 8"
         stroke="white"
@@ -38,7 +38,7 @@ const iconMap = {
     </Svg>
   ),
   coins: (
-    <Svg width={24} height={24} viewBox="0 0 32 32" fill="none">
+    <Svg width={20} height={20} viewBox="0 0 32 32" fill="none">
       <Circle cx={16} cy={16} r={12} stroke="white" strokeWidth={2} />
       <Path
         d="M16 12V20M13 16H19"
@@ -50,7 +50,7 @@ const iconMap = {
     </Svg>
   ),
   gift: (
-    <Svg width={24} height={24} viewBox="0 0 32 32" fill="none">
+    <Svg width={20} height={20} viewBox="0 0 32 32" fill="none">
       <Rect x={6} y={10} width={20} height={16} rx={2} stroke="white" strokeWidth={1.5} />
       <Path
         d="M16 10V28M12 14V10H20V14"
@@ -62,7 +62,7 @@ const iconMap = {
     </Svg>
   ),
   briefcase: (
-    <Svg width={24} height={24} viewBox="0 0 32 32" fill="none">
+    <Svg width={20} height={20} viewBox="0 0 32 32" fill="none">
       <Rect x={6} y={10} width={20} height={14} rx={2} stroke="white" strokeWidth={1.5} />
       <Path d="M10 10V8C10 7.4 10.4 7 11 7H21C21.6 7 22 7.4 22 8V10" stroke="white" strokeWidth={1.5} />
       <Circle cx={16} cy={17} r={1.5} fill="white" />
@@ -132,32 +132,32 @@ export function QuickActionTile({
 const styles = StyleSheet.create({
   pressable: {
     width: '48%',
-    aspectRatio: 1.15,
+    aspectRatio: 1.3,
   },
   container: {
-    borderRadius: 20,
-    padding: 12,
-    paddingTop: 14,
-    aspectRatio: 1.15,
+    borderRadius: 16,
+    padding: 8,
+    paddingTop: 10,
+    aspectRatio: 1.3,
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
   content: {
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     width: '100%',
   },
   iconChip: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   label: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
     textAlign: 'center',
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
   },
 });
