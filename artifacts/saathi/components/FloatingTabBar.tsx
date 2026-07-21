@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
-import { router, usePathname, useFocusEffect } from 'expo-router';
+import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
@@ -12,6 +12,8 @@ const TABS: { key: string; path: '/(tabs)/home' | '/(tabs)/schemes' | '/(tabs)/i
   { key: 'schemes', path: '/(tabs)/schemes', icon: 'shield', labelKey: 'tabs.schemes' },
   { key: 'income', path: '/(tabs)/income', icon: 'bar-chart-2', labelKey: 'tabs.income' },
 ];
+
+let currentActiveTab = 'home';
 
 /**
  * Replaces the default React Navigation tab bar entirely (which is hidden
@@ -25,13 +27,7 @@ export function FloatingTabBar() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const isIOS = Platform.OS === 'ios';
-  const pathname = usePathname();
   const [activeTab, setActiveTab] = useState('home');
-
-  useEffect(() => {
-    const tab = pathname.split('/').pop() || 'home';
-    setActiveTab(tab);
-  }, [pathname]);
 
   return (
     <View style={[styles.wrap, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 6) }]}>
@@ -46,7 +42,10 @@ export function FloatingTabBar() {
           return (
             <Pressable
               key={tab.key}
-              onPress={() => router.push(tab.path)}
+              onPress={() => {
+                setActiveTab(tab.key);
+                router.push(tab.path);
+              }}
               style={[styles.item, isFocused && { backgroundColor: colors.primaryTint }]}
               hitSlop={12}
             >
