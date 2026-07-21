@@ -2,7 +2,7 @@ import React from 'react';
 import { Platform, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
-import { router, useSegments } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
@@ -25,10 +25,10 @@ export function FloatingTabBar() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const isIOS = Platform.OS === 'ios';
-  const segments = useSegments();
+  const pathname = usePathname();
 
-  // Get the current tab from segments (e.g., ['(tabs)', 'home'] -> 'home')
-  const currentTab = segments && segments.length > 1 ? segments[1] : 'home';
+  // Extract tab name from pathname (e.g., '/(tabs)/home' -> 'home')
+  const currentTab = pathname.split('/').pop() || 'home';
 
   return (
     <View style={[styles.wrap, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 6) }]}>
