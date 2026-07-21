@@ -14,6 +14,7 @@ import { listIncome } from '@/services/income';
 import { formatCurrency } from '@/utils/format';
 import { getOccupation } from '@/constants/occupations';
 import { Avatar, Card, IconTile, ProgressRing, LoadingState, SkeletonLoader, GradientBanner } from '@/components/ui';
+import { QuickActionTile } from '@/components/QuickActionTile';
 import type { JobListing } from '@/types/job';
 import type { GovtScheme } from '@/types/scheme';
 
@@ -196,39 +197,39 @@ export default function HomeScreen() {
 
       <View>
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t('home.quickActions')}</Text>
-        <View style={styles.grid}>
-          <View style={styles.tileWrap}>
-            <IconTile
-              icon="upload-cloud"
-              label={t('home.uploadDocs')}
-              onPress={() => router.push('/documents')}
-              gradient={['#2196F3', '#1565C0']}
-            />
-          </View>
-          <View style={styles.tileWrap}>
-            <IconTile
-              icon="trending-up"
-              label={t('home.addIncome')}
-              onPress={() => router.push('/(tabs)/income')}
-              gradient={['#4CAF50', '#2E7D32']}
-            />
-          </View>
-          <View style={styles.tileWrap}>
-            <IconTile
-              icon="gift"
-              label={t('home.viewSchemes')}
-              onPress={() => router.push('/(tabs)/schemes')}
-              gradient={['#9C27B0', '#6A1B9A']}
-            />
-          </View>
-          <View style={styles.tileWrap}>
-            <IconTile
-              icon="search"
-              label={t('home.findJobs')}
-              onPress={() => router.push('/jobs')}
-              gradient={['#FF9800', '#E65100']}
-            />
-          </View>
+        <View style={styles.quickActionsGrid}>
+          <QuickActionTile
+            label={t('home.uploadDocs')}
+            onPress={() => router.push('/documents')}
+            bgGradient={['#EAF2FD', '#D8E9FB']}
+            chipGradient={['#5AA0E8', '#2E6FC7']}
+            labelColor="#0C447C"
+            icon="upload"
+          />
+          <QuickActionTile
+            label={t('home.addIncome')}
+            onPress={() => router.push('/(tabs)/income')}
+            bgGradient={['#EFF6E4', '#E0EFCC']}
+            chipGradient={['#8FC44F', '#5E9520']}
+            labelColor="#27500A"
+            icon="coins"
+          />
+          <QuickActionTile
+            label={t('home.viewSchemes')}
+            onPress={() => router.push('/(tabs)/schemes')}
+            bgGradient={['#F1F0FE', '#E2E0FA']}
+            chipGradient={['#9A92EC', '#5A50C4']}
+            labelColor="#3C3489"
+            icon="gift"
+          />
+          <QuickActionTile
+            label={t('home.findJobs')}
+            onPress={() => router.push('/jobs')}
+            bgGradient={['#FDF3E2', '#FAE6C8']}
+            chipGradient={['#F2AC4A', '#D07F14']}
+            labelColor="#633806"
+            icon="briefcase"
+          />
         </View>
       </View>
 
@@ -309,6 +310,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 14,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    justifyContent: 'space-between',
   },
   tileWrap: {
     width: '48%',
