@@ -131,8 +131,8 @@ export function QuickActionTile({
 
 const styles = StyleSheet.create({
   pressable: {
-    flex: 1,
-    maxWidth: '48%',
+    width: '48%',
+    aspectRatio: 1,
   },
   container: {
     borderRadius: 20,

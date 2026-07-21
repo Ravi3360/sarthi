@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
-import { router, usePathname } from 'expo-router';
+import { router, useRoute } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
@@ -25,7 +25,14 @@ export function FloatingTabBar() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const isIOS = Platform.OS === 'ios';
-  const pathname = usePathname();
+  const route = useRoute();
+  const [activeTab, setActiveTab] = useState('home');
+
+  useEffect(() => {
+    if (route.name === 'home' || route.name === 'schemes' || route.name === 'income') {
+      setActiveTab(route.name);
+    }
+  }, [route.name]);
 
   return (
     <View style={[styles.wrap, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 6) }]}>
@@ -36,11 +43,11 @@ export function FloatingTabBar() {
       )}
       <View style={styles.row}>
         {TABS.map((tab) => {
-          const isFocused = pathname === tab.path || pathname.startsWith(`${tab.path}/`);
+          const isFocused = activeTab === tab.key;
           return (
             <Pressable
               key={tab.key}
-              onPress={() => router.replace(tab.path)}
+              onPress={() => router.push(tab.path)}
               style={[styles.item, isFocused && { backgroundColor: colors.primaryTint }]}
               hitSlop={12}
             >

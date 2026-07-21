@@ -314,8 +314,9 @@ const styles = StyleSheet.create({
   quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
-    justifyContent: 'space-between',
+    gap: 12,
+    justifyContent: 'space-around',
+    paddingHorizontal: 0,
   },
   tileWrap: {
     width: '48%',
