@@ -30,7 +30,6 @@ export function FloatingTabBar() {
   const [activeTab, setActiveTab] = useState('home');
 
   const handleTabPress = (tabKey: string, tabPath: string) => {
-    console.log('Tab pressed:', tabKey);
     setActiveTab(tabKey);
     router.push(tabPath);
   };
@@ -45,16 +44,15 @@ export function FloatingTabBar() {
       <View style={styles.row}>
         {TABS.map((tab) => {
           const isFocused = activeTab === tab.key;
-          console.log(`Tab ${tab.key}: isFocused=${isFocused}, activeTab=${activeTab}`);
           return (
             <Pressable
               key={tab.key}
               onPress={() => handleTabPress(tab.key, tab.path)}
-              style={[styles.item, isFocused && { backgroundColor: colors.primaryTint }]}
+              style={[styles.item, isFocused && { backgroundColor: colors.primaryTint, borderRadius: 12 }]}
               hitSlop={12}
             >
-              <Feather name={tab.icon} size={28} color={isFocused ? colors.primary : colors.mutedForeground} />
-              <Text numberOfLines={1} style={[styles.label, { color: isFocused ? colors.primary : colors.mutedForeground, fontWeight: isFocused ? '700' : '500' }]}>
+              <Feather name={tab.icon} size={isFocused ? 32 : 24} color={isFocused ? colors.primary : colors.mutedForeground} />
+              <Text numberOfLines={1} style={[styles.label, { color: isFocused ? colors.primary : colors.mutedForeground, fontWeight: isFocused ? '800' : '500' }]}>
                 {t(tab.labelKey)}
               </Text>
             </Pressable>
