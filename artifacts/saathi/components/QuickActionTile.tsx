@@ -14,7 +14,7 @@ interface QuickActionTileProps {
 
 const iconMap = {
   upload: (
-    <Svg width={32} height={32} viewBox="0 0 32 32" fill="none">
+    <Svg width={24} height={24} viewBox="0 0 32 32" fill="none">
       <Path
         d="M16 4V14M16 4L12 8M16 4L20 8"
         stroke="white"
@@ -38,7 +38,7 @@ const iconMap = {
     </Svg>
   ),
   coins: (
-    <Svg width={32} height={32} viewBox="0 0 32 32" fill="none">
+    <Svg width={24} height={24} viewBox="0 0 32 32" fill="none">
       <Circle cx={16} cy={16} r={12} stroke="white" strokeWidth={2} />
       <Path
         d="M16 12V20M13 16H19"
@@ -50,7 +50,7 @@ const iconMap = {
     </Svg>
   ),
   gift: (
-    <Svg width={32} height={32} viewBox="0 0 32 32" fill="none">
+    <Svg width={24} height={24} viewBox="0 0 32 32" fill="none">
       <Rect x={6} y={10} width={20} height={16} rx={2} stroke="white" strokeWidth={1.5} />
       <Path
         d="M16 10V28M12 14V10H20V14"
@@ -62,7 +62,7 @@ const iconMap = {
     </Svg>
   ),
   briefcase: (
-    <Svg width={32} height={32} viewBox="0 0 32 32" fill="none">
+    <Svg width={24} height={24} viewBox="0 0 32 32" fill="none">
       <Rect x={6} y={10} width={20} height={14} rx={2} stroke="white" strokeWidth={1.5} />
       <Path d="M10 10V8C10 7.4 10.4 7 11 7H21C21.6 7 22 7.4 22 8V10" stroke="white" strokeWidth={1.5} />
       <Circle cx={16} cy={17} r={1.5} fill="white" />
@@ -136,26 +136,26 @@ const styles = StyleSheet.create({
   },
   container: {
     borderRadius: 20,
-    padding: 20,
-    paddingTop: 24,
+    padding: 16,
+    paddingTop: 18,
     aspectRatio: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
   content: {
     alignItems: 'center',
-    gap: 14,
+    gap: 10,
     width: '100%',
   },
   iconChip: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
     textAlign: 'center',
     letterSpacing: 0.2,
