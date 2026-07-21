@@ -36,11 +36,16 @@ export function FloatingTabBar() {
       )}
       <View style={styles.row}>
         {TABS.map((tab) => {
-          const isFocused = pathname === `/${tab.key}`;
+          const isFocused = pathname === tab.path || pathname.startsWith(`${tab.path}/`);
           return (
-            <Pressable key={tab.key} onPress={() => router.replace(tab.path)} style={styles.item} hitSlop={12}>
+            <Pressable
+              key={tab.key}
+              onPress={() => router.replace(tab.path)}
+              style={[styles.item, isFocused && { backgroundColor: colors.primaryTint }]}
+              hitSlop={12}
+            >
               <Feather name={tab.icon} size={28} color={isFocused ? colors.primary : colors.mutedForeground} />
-              <Text numberOfLines={1} style={[styles.label, { color: isFocused ? colors.primary : colors.mutedForeground }]}>
+              <Text numberOfLines={1} style={[styles.label, { color: isFocused ? colors.primary : colors.mutedForeground, fontWeight: isFocused ? '700' : '500' }]}>
                 {t(tab.labelKey)}
               </Text>
             </Pressable>
